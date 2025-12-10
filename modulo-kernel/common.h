@@ -94,10 +94,12 @@ static int read_task_cmdline(struct task_struct *task, char *buf, int bufsize)
 }
 
 /* helper simple para calcular porcentaje (con cuidado en enteros) */
-static double percent_of(unsigned long part_kb, unsigned long total_kb)
+static unsigned long percent_of_x100(unsigned long part_kb, unsigned long total_kb)
 {
-    if (total_kb == 0) return 0.0;
-    return (double)part_kb * 100.0 / (double)total_kb;
+    if (total_kb == 0) return 0;
+    return (part_kb * 10000) / total_kb;  
+    
 }
+
 
 #endif /* _COMMON_H */
