@@ -1,5 +1,7 @@
-/* sysinfo.c - /proc/sysinfo_so1_<CARNET> */
 #include "common.h"
+#include <linux/sched.h>
+#include <linux/sched/task.h>
+#include <linux/sched/signal.h>
 
 static int sys_show(struct seq_file *m, void *v)
 {
@@ -17,16 +19,22 @@ static int sys_show(struct seq_file *m, void *v)
 
     rcu_read_lock();
     for_each_process(task) {
+
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
-        struct mm_struct *mm = task->mm;
 
-        get_mem_from_mm(mm, &vsz_kb, &rss_kb);
+        get_mem_from_mm(task->mm, &vsz_kb, &rss_kb);
         read_task_cmdline(task, cmdline, CMDLINE_MAX);
 
+        char state = task_state_to_char(task);
+
         seq_printf(m,
-            "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", \"vsz_kb\": %lu, \"rss_kb\": %lu, \"mem_pct\": %.2f, \"state\": \"%ld\" },\n",
-            task->pid, task->comm, cmdline, vsz_kb, rss_kb, percent_of(rss_kb, total_kb), task->state);
+            "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
+            "\"vsz_kb\": %lu, \"rss_kb\": %lu, \"mem_pct\": %.2f, \"state\": \"%c\" },\n",
+            task->pid, task->comm, cmdline,
+            vsz_kb, rss_kb, percent_of(rss_kb, total_kb),
+            state
+        );
     }
     rcu_read_unlock();
 
@@ -39,12 +47,12 @@ static int sys_open(struct inode *inode, struct file *file)
     return single_open(file, sys_show, NULL);
 }
 
-static const struct file_operations sys_fops = {
-    .owner = THIS_MODULE,
-    .open = sys_open,
-    .read = seq_read,
-    .llseek = seq_lseek,
-    .release = single_release,
+/* ====  CORRECTO PARA KERNEL 6.14  ==== */
+static const struct proc_ops sys_fops = {
+    .proc_open = sys_open,
+    .proc_read = seq_read,
+    .proc_lseek = seq_lseek,
+    .proc_release = single_release,
 };
 
 static int __init sys_init(void)
