@@ -1,45 +1,26 @@
-/* continfo.c - /proc/continfo_so1_<CARNET> (filtro heurístico para "contenedores") */
 #include "common.h"
+#include <linux/sched.h>
+#include <linux/sched/task.h>
+#include <linux/sched/signal.h>
 
-/* Heurística: consideramos "proceso de contenedor" si su cmdline contiene "container" o si el cgroup tiene "docker" o "kubepods".
-   Esta heurística puede cambiar dependiendo de tu sistema; ver nota al final sobre detección robusta. */
 
-static bool is_container_task(struct task_struct *task, char *cmdline)
+static bool is_container_task(char *cmdline)
 {
-    /* 1) cmdline heurístico */
-    if (cmdline && (strstr(cmdline, "container") || strstr(cmdline, "docker") || strstr(cmdline, "runc")))
-        return true;
+    if (!cmdline)
+        return false;
 
-    /* 2) revisar cgroup (si está disponible) - sólo heurístico */
-#if defined(CONFIG_CGROUPS)
-    {
-        struct task_cgroup *tc;
-        /* task->cgroups no se debe acceder sin protección; usar rcu */
-        rcu_read_lock();
-        if (task->cgroups) {
-            /* intentar comprobar cgroups -> default cgroup name (heurístico) */
-            struct cgroup_subsys_state *css;
-            /* Tomamos el primer subsystem (cpuset) como heurístico */
-            css = task->cgroups->subsys[0];
-            if (css && css->cgroup && css->cgroup->kn && css->cgroup->kn->name) {
-                const char *name = css->cgroup->kn->name;
-                if (strstr(name, "docker") || strstr(name, "kubepods") || strstr(name, "container"))
-                {
-                    rcu_read_unlock();
-                    return true;
-                }
-            }
-        }
-        rcu_read_unlock();
-    }
-#endif
+    if (strstr(cmdline, "docker")) return true;
+    if (strstr(cmdline, "container")) return true;
+    if (strstr(cmdline, "runc")) return true;
+    if (strstr(cmdline, "busybox")) return true;
+
     return false;
 }
 
 static int cont_show(struct seq_file *m, void *v)
 {
-    unsigned long total_kb, free_kb, used_kb;
     struct task_struct *task;
+    unsigned long total_kb, free_kb, used_kb;
 
     get_meminfo_kb(&total_kb, &free_kb);
     used_kb = total_kb - free_kb;
@@ -52,18 +33,33 @@ static int cont_show(struct seq_file *m, void *v)
 
     rcu_read_lock();
     for_each_process(task) {
+
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
-        struct mm_struct *mm = task->mm;
 
+        /* Obtener cmdline */
         read_task_cmdline(task, cmdline, CMDLINE_MAX);
-        if (!is_container_task(task, cmdline)) continue; /* filtra */
 
-        get_mem_from_mm(mm, &vsz_kb, &rss_kb);
+        /* Filtrar procesos que parecen ser contenedores */
+        if (!is_container_task(cmdline))
+            continue;
+
+        /* Obtener vsz y rss */
+        get_mem_from_mm(task->mm, &vsz_kb, &rss_kb);
+
+        /* calcular porcentaje sin float */
+        unsigned long pct_x100 = percent_of_x100(rss_kb, total_kb);
+        unsigned long pct_int  = pct_x100 / 100;
+        unsigned long pct_dec  = pct_x100 % 100;
 
         seq_printf(m,
-            "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", \"vsz_kb\": %lu, \"rss_kb\": %lu, \"mem_pct\": %.2f },\n",
-            task->pid, task->comm, cmdline, vsz_kb, rss_kb, percent_of(rss_kb, total_kb));
+            "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
+            "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
+            "\"mem_pct\": \"%lu.%02lu\" },\n",
+            task->pid, task->comm, cmdline,
+            vsz_kb, rss_kb,
+            pct_int, pct_dec
+        );
     }
     rcu_read_unlock();
 
@@ -76,12 +72,12 @@ static int cont_open(struct inode *inode, struct file *file)
     return single_open(file, cont_show, NULL);
 }
 
-static const struct file_operations cont_fops = {
-    .owner = THIS_MODULE,
-    .open = cont_open,
-    .read = seq_read,
-    .llseek = seq_lseek,
-    .release = single_release,
+/* proc_ops para kernel 6.x */
+static const struct proc_ops cont_fops = {
+    .proc_open    = cont_open,
+    .proc_read    = seq_read,
+    .proc_lseek   = seq_lseek,
+    .proc_release = single_release,
 };
 
 static int __init cont_init(void)
