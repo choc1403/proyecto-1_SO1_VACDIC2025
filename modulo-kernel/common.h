@@ -2,6 +2,7 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/mm.h>
@@ -16,6 +17,7 @@
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
 #include <linux/ktime.h>
+#include <linux/timer.h>
 
 #define PROC_NAME_SYS "sysinfo_so1_202041390"     
 #define PROC_NAME_CONT "continfo_so1_202041390"
