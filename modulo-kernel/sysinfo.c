@@ -22,17 +22,23 @@ static int sys_show(struct seq_file *m, void *v)
 
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
+        char state = task_state_to_char(task);
 
         get_mem_from_mm(task->mm, &vsz_kb, &rss_kb);
         read_task_cmdline(task, cmdline, CMDLINE_MAX);
 
-        char state = task_state_to_char(task);
+        /* calcular % MEM sin double */
+        unsigned long pct_x100 = percent_of_x100(rss_kb, total_kb);
+        unsigned long pct_int = pct_x100 / 100;
+        unsigned long pct_dec = pct_x100 % 100;
 
         seq_printf(m,
             "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
-            "\"vsz_kb\": %lu, \"rss_kb\": %lu, \"mem_pct\": %.2f, \"state\": \"%c\" },\n",
+            "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
+            "\"mem_pct\": \"%lu.%02lu\", \"state\": \"%c\" },\n",
             task->pid, task->comm, cmdline,
-            vsz_kb, rss_kb, percent_of(rss_kb, total_kb),
+            vsz_kb, rss_kb,
+            pct_int, pct_dec,
             state
         );
     }
@@ -47,7 +53,6 @@ static int sys_open(struct inode *inode, struct file *file)
     return single_open(file, sys_show, NULL);
 }
 
-/* ====  CORRECTO PARA KERNEL 6.14  ==== */
 static const struct proc_ops sys_fops = {
     .proc_open = sys_open,
     .proc_read = seq_read,
