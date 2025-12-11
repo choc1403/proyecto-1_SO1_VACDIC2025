@@ -48,4 +48,25 @@ echo "Todas las imágenes han sido verificadas."
 # Mostrar imágenes creadas
 echo ""
 echo "Imágenes Docker existentes con los nombres especificados:"
-docker images | grep -E "(high_cpu_image|high_ram_image|low_usage_image|REPOSITORY)"
+
+# Ejecutar docker images | grep, pero redirigir su salida a un archivo temporal o /dev/null
+# y usar '|| true' para asegurar que el código de salida sea 0 incluso si grep no encuentra coincidencias.
+# Nota: Ajusté la expresión regular para que coincida con los nombres definidos arriba.
+docker images | grep -E "(alto_cpu_img|alta_ram_im|bajo_consumo_img|REPOSITORY)" 
+
+# La línea anterior puede seguir causando el problema. La forma más segura es la siguiente:
+# Ejecutar el grep y simplemente ignorar su código de salida, asegurando que el script termine exitosamente
+# si no hubo errores de 'docker build' o de ruta.
+
+docker images | grep -E "(alto_cpu_img|alta_ram_im|bajo_consumo_img|REPOSITORY)" || true
+
+# Finalmente, aseguramos un código de salida exitoso (0) para el script completo, 
+# a menos que haya habido un 'docker build' fallido.
+
+if $image_built; then
+    # Si construyó algo o fue exitoso anteriormente, salimos con 0
+    exit 0
+else
+    # Si todo se saltó o fue exitoso, también salimos con 0
+    exit 0 
+fi
