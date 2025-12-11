@@ -1,10 +1,7 @@
 
+Comando para darle permisos a todos los scripts de ejecucion. Sin la necesidad de ir uno por uno
 ```bash
-chmod +x cargar_modulos.sh
-chmod +x construir_imagen.sh
-chmod +x generar_contenedor.sh
-
-chmod +x ../bash/*.sh
+chmod +x *.sh
 
 ./prueba.sh
 
