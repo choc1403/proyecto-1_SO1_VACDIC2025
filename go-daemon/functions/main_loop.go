@@ -13,6 +13,12 @@ const (
 	PROC_CONT = "/proc/continfo_so1_202041390"
 	PROC_SYS  = "/proc/sysinfo_so1_202041390"
 )
+var (
+    CRON_START_SCRIPT    = absPath("../bash/ejecutar_cron.sh")
+    CRON_STOP_SCRIPT     = absPath("../bash/detener_cron.sh")
+    LOAD_MODULES_SCRIPT  = absPath("../bash/cargar_modulos.sh")
+    IMAGES_GENERATE_SCRIPT = absPath("../bash/construir_imagen.sh")
+)
 
 /*
    Este archivo contiene:
@@ -21,6 +27,12 @@ const (
    - invocación de la lógica de decisión
    - ejecución de scripts (cron, grafana, imágenes, módulos)
 */
+
+func absPath(rel string) string {
+    base, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+    return filepath.Join(base, rel)
+}
+
 
 // ------------------------------------------------------
 // UNA iteración del loop
