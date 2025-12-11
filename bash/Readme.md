@@ -5,4 +5,5 @@ chmod +x *.sh
 
 ./prueba.sh
 
+ls -l *.sh
 ```

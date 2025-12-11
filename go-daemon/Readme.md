@@ -1,16 +1,15 @@
 ```bash
-/etc/systemd/system/so1daemon.service
+sudo go build -o /usr/local/bin/mydaemon main.go
+
+
+sudo nano /etc/systemd/system/mydaemon.service
 [Unit]
-Description=SO1 Daemon (Container Manager)
-After=network.target docker.service
-Requires=docker.service
+Description=Mi daemon en Go
+After=network.target
 
 [Service]
-ExecStart=/ruta/a/tu/go-daemon/so1-daemon
-WorkingDirectory=/ruta/a/tu/go-daemon
+ExecStart=/usr/local/bin/mydaemon
 Restart=always
-User=root
-Environment=CGO_ENABLED=1
 
 [Install]
 WantedBy=multi-user.target
