@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"io/ioutil"
 	"os"
+	"so1-daemon/utils"
 	"so1-daemon/var_const"
 	"time"
-	_ "github.com/mattn/go-sqlite3"
+
+	_ "modernc.org/sqlite"
 )
 
-var SCHEMA_SQL = "./schemas.sql"
+var SCHEMA_SQL = utils.ABSPATH("../database/schema.sql")
 
 func InitDB() error {
 	if _, err := os.Stat("./data"); os.IsNotExist(err) {
@@ -18,7 +20,7 @@ func InitDB() error {
 		}
 	}
 	var err error
-	var_const.DB, err = sql.Open("sqlite3", var_const.DB_PATH)
+	var_const.DB, err = sql.Open("sqlite", var_const.DB_PATH)
 
 	if err != nil {
 		return err
