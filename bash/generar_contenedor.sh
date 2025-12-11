@@ -72,3 +72,7 @@ if (( MISSING_TOTAL > 0 )); then
 fi
 
 echo "Listo. Sistema estable según las reglas."
+echo "Ahora:"
+echo "   Bajo consumo:  $CURRENT_LOW"
+echo "   Alto consumo:  $CURRENT_HIGH"
+echo "   Total:         $CURRENT_TOTAL"
