@@ -10,6 +10,7 @@ var (
 	CRON_STOP_SCRIPT       = ABSPATH("../../bash/detener_cron.sh")
 	LOAD_MODULES_SCRIPT    = ABSPATH("../../bash/cargar_modulos.sh")
 	IMAGES_GENERATE_SCRIPT = ABSPATH("../../bash/construir_imagen.sh")
+	GRAFANA_COMPOSE_SCRIPT = ABSPATH("../../bash/grafana/generar_grafana.sh")
 )
 
 func StartGrafana() error {
@@ -58,5 +59,23 @@ func LoadModules() error {
 		return fmt.Errorf("load modules failed: %v | out: %s", err, out)
 	}
 	log.Printf("Modules load output: %s", out)
+	return nil
+}
+
+func BuildImages() error {
+	out, err := RunCommand("bash", IMAGES_GENERATE_SCRIPT)
+	if err != nil {
+		return fmt.Errorf("build images failed: %v | out: %s", err, out)
+	}
+	log.Printf("Images generated: %s", out)
+	return nil
+}
+
+func GenerateGrafanaCompose() error {
+	out, err := RunCommand("bash", GRAFANA_COMPOSE_SCRIPT)
+	if err != nil {
+		return fmt.Errorf("grafana compose generation failed: %v | out: %s", err, out)
+	}
+	log.Println(out)
 	return nil
 }
