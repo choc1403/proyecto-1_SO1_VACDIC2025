@@ -15,7 +15,7 @@ var (
 	IMAGES_GENERATE_SCRIPT = ABSPATH("../../bash/construir_imagen.sh")
 	GRAFANA_COMPOSE_SCRIPT = ABSPATH("../../bash/grafana/generar_grafana.sh")
 
-	TEST = ABSPATH("../../bash/prueba.sh")
+	TEST = ABSPATH("../bash/prueba.sh")
 )
 
 func TestBash() error {
