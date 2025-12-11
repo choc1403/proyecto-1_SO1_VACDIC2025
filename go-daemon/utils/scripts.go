@@ -9,11 +9,12 @@ import (
 )
 
 var (
-	CRON_START_SCRIPT      = ABSPATH("../../bash/ejecutar_cron.sh")
-	CRON_STOP_SCRIPT       = ABSPATH("../../bash/detener_cron.sh")
-	LOAD_MODULES_SCRIPT    = ABSPATH("../../bash/cargar_modulos.sh")
-	IMAGES_GENERATE_SCRIPT = ABSPATH("../../bash/construir_imagen.sh")
-	GRAFANA_COMPOSE_SCRIPT = ABSPATH("../../bash/grafana/generar_grafana.sh")
+	CRON_START_SCRIPT         = ABSPATH("../bash/ejecutar_cron.sh")
+	CRON_STOP_SCRIPT          = ABSPATH("../bash/detener_cron.sh")
+	LOAD_MODULES_SCRIPT       = ABSPATH("../bash/cargar_modulos.sh")
+	IMAGES_GENERATE_SCRIPT    = ABSPATH("../bash/construir_imagen.sh")
+	GENERATE_CONTAINER_SCRIPT = ABSPATH("../bash/generar_contenedor.sh")
+	GRAFANA_COMPOSE_SCRIPT    = ABSPATH("../bash/grafana/generar_grafana.sh")
 
 	TEST = ABSPATH("../bash/prueba.sh")
 )
@@ -28,7 +29,7 @@ func TestBash() error {
 	if err != nil {
 		return fmt.Errorf("start test failed: %v | out: %s", err, out)
 	}
-	log.Printf("Cron started: %s", out)
+	log.Printf("Test started: %s", out)
 	return nil
 }
 
@@ -88,6 +89,16 @@ func BuildImages() error {
 	}
 	log.Printf("Images generated: %s", out)
 	return nil
+}
+
+func BuildContainers() error {
+	out, err := RunCommand("bash", GENERATE_CONTAINER_SCRIPT)
+	if err != nil {
+		return fmt.Errorf("build container failed: %v | out: %s", err, out)
+	}
+	log.Printf("Containers generated: %s", out)
+	return nil
+
 }
 
 func GenerateGrafanaCompose() error {

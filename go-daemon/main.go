@@ -7,8 +7,14 @@ import (
 
 func main() {
 
-	if err := utils.TestBash(); err != nil {
-		log.Printf("Warning: load modules failed: %v", err)
+	// Generar las 3 imagenes
+	if err := utils.BuildImages(); err != nil {
+		log.Printf("Warning: load images failed: %v", err)
+	}
+
+	// Generar los 10 Contenedores
+	if err := utils.BuildContainers(); err != nil {
+		log.Printf("Warning: load containers failed: %v", err)
 	}
 
 }
