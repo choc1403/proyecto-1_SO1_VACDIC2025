@@ -3,9 +3,13 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
 	"so1-daemon/database"
+	"so1-daemon/functions"
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -29,5 +33,36 @@ func main() {
 	if err := utils.LoadModules(); err != nil {
 		log.Printf("Warning: load modules failed: %v", err)
 	}
+
+	// handle signals for graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	// main loop ticker
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+
+	if err := functions.ProcessOnce(); err != nil {
+		log.Printf("Initial processOnce error: %v", err)
+	}
+
+loop:
+	for {
+		select {
+		case <-ticker.C:
+			if err := functions.ProcessOnce(); err != nil {
+				log.Printf("processOnce error: %v", err)
+			}
+		case <-stop:
+			log.Println("Received stop signal, cleaning up...")
+			break loop
+		}
+	}
+
+	// cleanup
+	if err := utils.RemoveCron(); err != nil {
+		log.Printf("Warning removing cron: %v", err)
+	}
+	log.Println("Daemon exiting.")
 
 }
