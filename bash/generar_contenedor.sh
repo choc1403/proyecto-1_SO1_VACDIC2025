@@ -9,8 +9,16 @@ REQUIRED_LOW=3
 REQUIRED_HIGH=2
 REQUIRED_TOTAL=10
 
+# Eliminar Todos los contenedores que estan detenidos
+docker container prune
+
+# Recuperar todos los recursos no usuados
+docker system prune -f
+
 # 1. CONTAR EXISTENTES
 CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
+
+
 
 echo "Actual:"
 echo "Total: $CURRENT_TOTAL"
