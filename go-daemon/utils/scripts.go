@@ -3,6 +3,9 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
+	"strings"
+	"time"
 )
 
 var (
@@ -78,4 +81,21 @@ func GenerateGrafanaCompose() error {
 	}
 	log.Println(out)
 	return nil
+}
+
+func IsGrafanaRunning() bool {
+	out, err := RunCommand("docker", "ps", "--filter", "name=grafana_so1", "--format", "{{.Names}}")
+	if err != nil {
+		return false
+	}
+	return strings.Contains(out, "grafana_so1")
+}
+
+func PingGrafana() bool {
+	conn, err := net.DialTimeout("tcp", "localhost:3000", 1*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }
