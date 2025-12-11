@@ -23,7 +23,7 @@ func TestBash() error {
 
 	comando := TEST
 
-	log.Println("Creating cronjob...")
+	log.Println("Realizando Pruebas...")
 	out, err := RunCommand("bash", comando)
 	if err != nil {
 		return fmt.Errorf("start test failed: %v | out: %s", err, out)
