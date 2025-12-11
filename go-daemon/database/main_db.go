@@ -6,6 +6,7 @@ import (
 	"os"
 	"so1-daemon/var_const"
 	"time"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var SCHEMA_SQL = "./schemas.sql"
