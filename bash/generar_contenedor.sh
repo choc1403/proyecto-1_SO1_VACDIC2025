@@ -3,7 +3,7 @@
 # Configuración
 LOW_IMAGE="bajo_consumo_img"
 HIGH_CPU_IMAGE="alto_cpu_img"
-HIGH_RAM_IMAGE="alta_ram_img"
+HIGH_RAM_IMAGE="alta_ram_im"
 
 REQUIRED_LOW=3
 REQUIRED_HIGH=2
