@@ -5,7 +5,7 @@
 
 # Definir nombres de las imágenes
 IMAGES=("alto_cpu_img" "alta_ram_im" "bajo_consumo_img")
-PATHS=("./alto_consumo/cpu" "./alto_consumo/ram" "./bajo_consumo")
+PATHS=("../bash/alto_consumo/cpu" "../bash/alto_consumo/ram" "../bash/bajo_consumo")
 
 echo "Verificando imágenes Docker..."
 
