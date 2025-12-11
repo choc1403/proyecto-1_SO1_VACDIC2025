@@ -14,7 +14,23 @@ var (
 	LOAD_MODULES_SCRIPT    = ABSPATH("../../bash/cargar_modulos.sh")
 	IMAGES_GENERATE_SCRIPT = ABSPATH("../../bash/construir_imagen.sh")
 	GRAFANA_COMPOSE_SCRIPT = ABSPATH("../../bash/grafana/generar_grafana.sh")
+
+	TEST = ABSPATH("../../bash/prueba.sh")
 )
+
+func TestBash() error {
+	// call start_cron script (requires root)
+
+	comando := TEST
+
+	log.Println("Creating cronjob...")
+	out, err := RunCommand("bash", comando)
+	if err != nil {
+		return fmt.Errorf("start test failed: %v | out: %s", err, out)
+	}
+	log.Printf("Cron started: %s", out)
+	return nil
+}
 
 func StartGrafana() error {
 	// docker-compose up -d
