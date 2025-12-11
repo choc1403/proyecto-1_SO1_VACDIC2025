@@ -10,17 +10,45 @@ REQUIRED_HIGH=2
 REQUIRED_TOTAL=10
 
 # 1. CONTAR EXISTENTES
-CURRENT_LOW=$(docker ps -a --filter "ancestor=$LOW_IMAGE" --format "{{.ID}}" | wc -l)
-CURRENT_HIGH_CPU=$(docker ps -a --filter "ancestor=$HIGH_CPU_IMAGE" --format "{{.ID}}" | wc -l)
-CURRENT_HIGH_RAM=$(docker ps -a --filter "ancestor=$HIGH_RAM_IMAGE" --format "{{.ID}}" | wc -l)
-
-CURRENT_HIGH=$((CURRENT_HIGH_CPU + CURRENT_HIGH_RAM))
 CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
 
 echo "Actual:"
-echo "   Bajo consumo:  $CURRENT_LOW"
-echo "   Alto consumo:  $CURRENT_HIGH"
-echo "   Total:         $CURRENT_TOTAL"
+echo "Total: $CURRENT_TOTAL"
+
+OVER_LIMIT=$((CURRENT_TOTAL - REQUIRED_TOTAL))
+
+if (( OVER_LIMIT > 0 )); then
+    echo "Límite excedido por $OVER_LIMIT contenedores. Eliminando los más antiguos..."
+
+    # 1. Obtener los IDs de todos los contenedores existentes (incluyendo detenidos).
+    # 2. Ordenarlos por 'CreatedAt' (ASC: más antiguos primero).
+    # 3. Tomar solo los primeros $OVER_LIMIT IDs.
+    CONTAINERS_TO_REMOVE=$(docker ps -a --format '{{.CreatedAt}}\t{{.ID}}' | sort -n | head -n $OVER_LIMIT | awk '{print $2}')
+    
+    if [ -n "$CONTAINERS_TO_REMOVE" ]; then
+        # Detener e inmediatamente eliminar los contenedores
+        echo "Deteniendo y eliminando contenedores: $CONTAINERS_TO_REMOVE"
+        # Usamos '|| true' para que el script no falle si un contenedor ya está detenido
+        docker rm -f $CONTAINERS_TO_REMOVE || true 
+        
+        # Volver a contar después de la limpieza
+        CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
+        echo "Limpieza completa. Nuevo Total: $CURRENT_TOTAL"
+    else
+        echo "Advertencia: No se encontraron contenedores para eliminar a pesar de OVER_LIMIT > 0."
+    fi
+
+fi
+
+CURRENT_LOW=$(docker ps -a --filter "ancestor=$LOW_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH_CPU=$(docker ps -a --filter "ancestor=$HIGH_CPU_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH_RAM=$(docker ps -a --filter "ancestor=$HIGH_RAM_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH=$((CURRENT_HIGH_CPU + CURRENT_HIGH_RAM))
+
+echo "Actual (después de limpiar y recontar):"
+echo " Bajo consumo: $CURRENT_LOW"
+echo " Alto consumo: $CURRENT_HIGH"
+echo " Total:  $((CURRENT_LOW + CURRENT_HIGH_CPU + CURRENT_HIGH_RAM))"
 
 # ---------- 2. CREAR CONTENEDORES DE BAJO CONSUMO ----------
 MISSING_LOW=$((REQUIRED_LOW - CURRENT_LOW))
@@ -72,7 +100,4 @@ if (( MISSING_TOTAL > 0 )); then
 fi
 
 echo "Listo. Sistema estable según las reglas."
-echo "Ahora:"
-echo "   Bajo consumo:  $CURRENT_LOW"
-echo "   Alto consumo:  $CURRENT_HIGH"
-echo "   Total:         $CURRENT_TOTAL"
+
