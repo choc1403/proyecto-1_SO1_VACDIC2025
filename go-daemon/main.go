@@ -13,6 +13,16 @@ import (
 )
 
 func main() {
+	// basic logger
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.Println("Daemon starting...")
+
+	// 1) start grafana
+	if err := utils.StartGrafana(); err != nil {
+		log.Printf("Warning: starting grafana failed: %v", err)
+	} else {
+		log.Println("Grafana started.")
+	}
 
 	// Inicializar sqlite
 	if err := database.InitDB(); err != nil {
