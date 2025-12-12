@@ -6,8 +6,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../go-daemon/data:/var/lib/sqlite   
+      - ../go-daemon/data:/var/lib/sqlite
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=frser-sqlite-datasource
     restart: unless-stopped
