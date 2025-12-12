@@ -24,7 +24,7 @@ Archivo encargado de la **lectura de tiempos de CPU** y del **cálculo del porce
 
 ---
 
-### ###  `func ReadTotalJiffies() (uint64, error)`
+### `func ReadTotalJiffies() (uint64, error)`
 
 Lee el tiempo total acumulado de CPU del sistema desde `/proc/stat`.
 
