@@ -1,29 +1,25 @@
 #!/bin/bash
 
-EXCLUDE_NAME="grafana_so1"
+# Detener todos los contenedores en ejecución
+echo "Deteniendo todos los contenedores..."
+running_containers=$(docker ps -q)
 
-echo "Buscando contenedores a detener y eliminar (excepto $EXCLUDE_NAME)..."
-
-# Obtener contenedores en ejecución EXCEPTO grafana_so1
-running_containers=$(docker ps -q --filter "name!=${EXCLUDE_NAME}")
-
-echo "Deteniendo contenedores..."
 if [ -n "$running_containers" ]; then
     docker stop $running_containers
     echo "Contenedores detenidos."
 else
-    echo "No hay contenedores para detener (o solo está $EXCLUDE_NAME)."
+    echo "No hay contenedores en ejecución."
 fi
 
-# Obtener todos los contenedores EXCEPTO grafana_so1
-all_containers=$(docker ps -aq --filter "name!=${EXCLUDE_NAME}")
+# Eliminar todos los contenedores
+echo "Eliminando todos los contenedores..."
+all_containers=$(docker ps -aq)
 
-echo "Eliminando contenedores..."
 if [ -n "$all_containers" ]; then
     docker rm $all_containers
     echo "Contenedores eliminados."
 else
-    echo "No hay contenedores para eliminar (o solo está $EXCLUDE_NAME)."
+    echo "No hay contenedores para eliminar."
 fi
 
-echo "Tarea completada. El contenedor '$EXCLUDE_NAME' sigue intacto."
+echo "Tarea completada."
