@@ -22,3 +22,9 @@ CREATE TABLE IF NOT EXISTS sys_metrics (
   mem_used_kb INTEGER,
   ts INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS process_count (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  total INTEGER,
+  ts INTEGER
+);

@@ -138,6 +138,7 @@ func ProcessOnce() error {
 		return fmt.Errorf("parse sys json: %v", err)
 	}
 	database.InsertSysMetrics(sys.MemTotalKb, sys.MemFreeKb, sys.MemUsedKb)
+	database.InsertProcessCount(len(sys.Processes))
 
 	// read cont info
 	contB, err := utils.ReadProcFile(var_const.PROC_CONT)

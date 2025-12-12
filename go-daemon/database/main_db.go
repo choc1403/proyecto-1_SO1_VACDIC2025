@@ -53,3 +53,14 @@ func InsertDeletion(containerID, reason string) {
 	defer var_const.DBLock.Unlock()
 	_, _ = var_const.DB.Exec("INSERT INTO deletions(container_id, reason, ts) VALUES(?,?,?)", containerID, reason, time.Now().Unix())
 }
+
+func InsertProcessCount(total int) {
+	var_const.DBLock.Lock()
+	defer var_const.DBLock.Unlock()
+
+	_, _ = var_const.DB.Exec(
+		"INSERT INTO process_count(total, ts) VALUES(?, ?)",
+		total,
+		time.Now().Unix(),
+	)
+}
