@@ -39,11 +39,19 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	highCount := 0
 	for _, c := range detected {
 		img := strings.ToLower(c.Docker.Image)
-		if strings.Contains(img, "high") || strings.Contains(img, "cpu") || strings.Contains(img, "mem") {
+
+		isHigh := strings.Contains(img, "high")
+		isLow := strings.Contains(img, "low")
+
+		if isHigh {
 			highCount++
+		} else if isLow {
+			lowCount++
 		} else {
+			// por si hay contenedores que no son tuyos
 			lowCount++
 		}
+
 	}
 
 	// For each detected compute mem% (parse) and cpu% using /proc
@@ -85,7 +93,8 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		}
 		// ensure we don't drop below minima
 		img := strings.ToLower(cand.C.Docker.Image)
-		isHigh := strings.Contains(img, "high") || strings.Contains(img, "cpu") || strings.Contains(img, "mem")
+		isHigh := strings.Contains(img, "high")
+		isLow := strings.Contains(img, "low")
 
 		if shouldKill {
 			if cand.C.Docker.ContainerID == "" {
@@ -103,9 +112,23 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 					log.Printf("Would delete %s but would violate MIN_HIGH_CONTAINERS (%d)", cand.C.Docker.ContainerID, var_const.MIN_HIGH_CONTAINERS)
 					continue
 				}
+			} else if isLow {
+				if lowCount <= var_const.MIN_LOW_CONTAINERS {
+					log.Printf(
+						"Would delete %s but would violate MIN_LOW_CONTAINERS (%d)",
+						cand.C.Docker.ContainerID,
+						var_const.MIN_LOW_CONTAINERS,
+					)
+					continue
+				}
+
 			} else {
 				if lowCount <= var_const.MIN_LOW_CONTAINERS {
-					log.Printf("Would delete %s but would violate MIN_LOW_CONTAINERS (%d)", cand.C.Docker.ContainerID, var_const.MIN_LOW_CONTAINERS)
+					log.Printf(
+						"Would delete %s (unclassified image) but would violate MIN_LOW_CONTAINERS (%d)",
+						cand.C.Docker.ContainerID,
+						var_const.MIN_LOW_CONTAINERS,
+					)
 					continue
 				}
 			}
