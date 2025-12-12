@@ -74,7 +74,7 @@ func LoadModules() error {
 	comando := LOAD_MODULES_SCRIPT
 
 	log.Println("Loading kernel modules...")
-	out, err := RunCommand("bash", comando)
+	out, err := RunCommand("sudo", "bash", comando)
 	if err != nil {
 		return fmt.Errorf("load modules failed: %v | out: %s", err, out)
 	}
