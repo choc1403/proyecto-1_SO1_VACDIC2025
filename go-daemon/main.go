@@ -60,6 +60,7 @@ loop:
 	for {
 		select {
 		case <-ticker.C:
+			log.Println("Loop tick: ejecutando ProcessOnce()...")
 			if err := functions.ProcessOnce(); err != nil {
 				log.Printf("processOnce error: %v", err)
 			}
