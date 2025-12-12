@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Configuración
-LOW_IMAGE="low_image"
-HIGH_CPU_IMAGE="high_cpu_image"
-HIGH_RAM_IMAGE="high_mem_image"
+LOW_IMAGE="low_img"
+HIGH_CPU_IMAGE="high_cpu_img"
+HIGH_RAM_IMAGE="high_mem_img"
 
 
 REQUIRED_LOW=3
