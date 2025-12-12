@@ -74,6 +74,10 @@ loop:
 	if err := utils.RemoveCron(); err != nil {
 		log.Printf("Warning removing cron: %v", err)
 	}
+
+	if err := utils.StopContainer(); err != nil {
+		log.Printf("Warning removing containers: %v", err)
+	}
 	log.Println("Daemon exiting.")
 
 }

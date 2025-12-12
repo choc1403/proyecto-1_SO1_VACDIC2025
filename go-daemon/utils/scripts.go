@@ -15,6 +15,7 @@ var (
 	IMAGES_GENERATE_SCRIPT    = ABSPATH("../bash/construir_imagen.sh")
 	GENERATE_CONTAINER_SCRIPT = ABSPATH("../bash/generar_contenedor.sh")
 	GRAFANA_COMPOSE_SCRIPT    = ABSPATH("../bash/grafana/generar_grafana.sh")
+	STOP_CONTAINERS           = ABSPATH("../bash/detener_contenedores.sh")
 
 	TEST = ABSPATH("../bash/prueba.sh")
 )
@@ -30,6 +31,20 @@ func TestBash() error {
 		return fmt.Errorf("start test failed: %v | out: %s", err, out)
 	}
 	log.Printf("Test started: %s", out)
+	return nil
+}
+
+func StopContainer() error {
+	// call start_cron script (requires root)
+
+	comando := STOP_CONTAINERS
+
+	log.Println("Deteniendo Contenedor...")
+	out, err := RunCommand("bash", comando)
+	if err != nil {
+		return fmt.Errorf("start stop containers failed: %v | out: %s", err, out)
+	}
+	log.Printf("Containers Stop started: %s", out)
 	return nil
 }
 
