@@ -36,7 +36,7 @@ func TestBash() error {
 func StartGrafana() error {
 	// docker-compose up -d
 	log.Println("Starting grafana with docker-compose...")
-	out, err := RunCommand("docker-compose", "up", "-d")
+	out, err := RunCommand("docker", "compose", "up", "-d")
 	if err != nil {
 		return fmt.Errorf("docker-compose up failed: %v | out: %s", err, out)
 	}
