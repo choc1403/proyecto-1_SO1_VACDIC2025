@@ -39,7 +39,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	highCount := 0
 	for _, c := range detected {
 		img := strings.ToLower(c.Docker.Image)
-		if strings.Contains(img, "high") || strings.Contains(img, "cpu") || strings.Contains(img, "mem") {
+		if strings.Contains(img, "alta_ram_im") || strings.Contains(img, "alto_cpu_img") || strings.Contains(img, "bajo_consumo_img") {
 			highCount++
 		} else {
 			lowCount++
@@ -85,7 +85,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		}
 		// ensure we don't drop below minima
 		img := strings.ToLower(cand.C.Docker.Image)
-		isHigh := strings.Contains(img, "high") || strings.Contains(img, "cpu") || strings.Contains(img, "mem")
+		isHigh := strings.Contains(img, "alta_ram_im") || strings.Contains(img, "alto_cpu_img") || strings.Contains(img, "bajo_consumo_img")
 		if shouldKill {
 			if cand.C.Docker.ContainerID == "" {
 				// if not a docker container, skip deletion (can't)
