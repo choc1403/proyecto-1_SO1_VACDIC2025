@@ -47,7 +47,7 @@ func StartGrafana() error {
 func CreateCron() error {
 	// call start_cron script (requires root)
 
-	comando := CRON_START_SCRIPT
+	comando := GENERATE_CONTAINER_SCRIPT
 
 	log.Println("Creating cronjob...")
 	out, err := RunCommand("bash", comando)
