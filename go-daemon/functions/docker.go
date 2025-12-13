@@ -15,8 +15,6 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 		return nil, err
 	}
 
-	log.Println("Resultado obtenido1: ", out)
-
 	lines := strings.Fields(out)
 	result := make(map[int]var_const.DockerInfo)
 
@@ -27,7 +25,7 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 		if err != nil {
 			continue
 		}
-		log.Println("Resultado obtenido2: ", out2)
+
 		parts := strings.Fields(strings.TrimSpace(out2))
 		if len(parts) < 4 {
 			continue
