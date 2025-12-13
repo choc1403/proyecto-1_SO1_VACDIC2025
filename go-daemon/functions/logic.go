@@ -25,7 +25,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	var detected []CInfo
 	for _, p := range containers {
 
-		log.Println("Que significa esto dmap[p.Pid]? ", dmap[p.Pid])
+		log.Println("Que significa esto p.Name? ", p.Name)
 		if d, ok := dmap[p.Pid]; ok {
 			detected = append(detected, CInfo{Proc: p, Docker: d})
 		} else {
