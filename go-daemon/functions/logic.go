@@ -25,13 +25,11 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	}
 	var detected []CInfo
 	for _, p := range containers {
-		// check docker map by matching pid
-		if d, ok := dmap[p.Pid]; ok {
-			detected = append(detected, CInfo{Proc: p, Docker: d})
-		} else {
-			// create placeholder DockerInfo using pid and cmdline as image
-			detected = append(detected, CInfo{Proc: p, Docker: var_const.DockerInfo{ContainerID: "", Image: p.Cmdline, Pid: p.Pid, Name: p.Name}})
+		d, ok := dmap[p.Pid]
+		if !ok {
+			continue
 		}
+		detected = append(detected, CInfo{Proc: p, Docker: d})
 	}
 
 	// count low/high based on image naming heuristic: image contains "low" or "high"
@@ -40,15 +38,13 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	for _, c := range detected {
 		img := strings.ToLower(c.Docker.Image)
 
-		isHigh := strings.Contains(img, "high")
-		isLow := strings.Contains(img, "low")
+		isLow := strings.Contains(img, "low_img")
+		isHighCPU := strings.Contains(img, "high_cpu_img")
+		isHighRAM := strings.Contains(img, "high_mem_img")
 
-		if isHigh {
+		if isHighCPU || isHighRAM {
 			highCount++
 		} else if isLow {
-			lowCount++
-		} else {
-			// por si hay contenedores que no son tuyos
 			lowCount++
 		}
 
@@ -81,20 +77,28 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 	// select to delete: those exceeding thresholds, but respect minima and don't kill grafana
 	for _, cand := range candidates {
+		img := strings.ToLower(cand.C.Docker.Image)
+
+		isLow := strings.Contains(img, "low_img")
+		isHighCPU := strings.Contains(img, "high_cpu_img")
+		isHighRAM := strings.Contains(img, "high_mem_img")
+
 		shouldKill := false
 		reason := ""
-		if cand.Cpu > var_const.CPU_THRESHOLD {
+
+		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
 			shouldKill = true
 			reason = fmt.Sprintf("cpu %.2f > %.2f", cand.Cpu, var_const.CPU_THRESHOLD)
 		}
-		if cand.Mem > var_const.MEM_THRESHOLD {
+		if isHighRAM && cand.Mem > var_const.MEM_THRESHOLD {
 			shouldKill = true
 			reason = fmt.Sprintf("mem %.2f > %.2f", cand.Mem, var_const.MEM_THRESHOLD)
 		}
+		if isLow && (cand.Cpu > var_const.CPU_THRESHOLD || cand.Mem > var_const.MEM_THRESHOLD) {
+			shouldKill = true
+			reason = "low container exceeded threshold"
+		}
 		// ensure we don't drop below minima
-		img := strings.ToLower(cand.C.Docker.Image)
-		isHigh := strings.Contains(img, "high")
-		isLow := strings.Contains(img, "low")
 
 		if shouldKill {
 			if cand.C.Docker.ContainerID == "" {
@@ -107,7 +111,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 				log.Printf("Skipping deletion of grafana container %s", cand.C.Docker.ContainerID)
 				continue
 			}
-			if isHigh {
+			if isHighCPU || isHighRAM {
 				if highCount <= var_const.MIN_HIGH_CONTAINERS {
 					log.Printf("Would delete %s but would violate MIN_HIGH_CONTAINERS (%d)", cand.C.Docker.ContainerID, var_const.MIN_HIGH_CONTAINERS)
 					continue
@@ -140,7 +144,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 			} else {
 				database.InsertDeletion(cand.C.Docker.ContainerID, reason)
 				// adjust counts
-				if isHigh {
+				if isHighCPU || isHighRAM {
 					highCount--
 				} else {
 					lowCount--
