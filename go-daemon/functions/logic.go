@@ -25,7 +25,8 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	var detected []CInfo
 	for _, p := range containers {
 
-		log.Println("Que significa esto p.Name? ", p.Name)
+		log.Println("Nombre del proceso: ", p.Name, "Línea de Comandos Completa: ", p.Cmdline)
+
 		if d, ok := dmap[p.Pid]; ok {
 			detected = append(detected, CInfo{Proc: p, Docker: d})
 		} else {
@@ -46,6 +47,11 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	lowCount := 0
 	highCount := 0
 	for _, c := range detected {
+		if c.Proc.Name == "containerd" || c.Proc.Name == "containerd-shim" || c.Proc.Name == "dockerd" || c.Proc.Name == "docker-proxy" {
+			// Opcional: registrar que es infraestructura y continuar al siguiente
+			log.Printf("Skip: Infrastructure process %s with PID %d", c.Proc.Name, c.Proc.Pid)
+			continue // Salta la clasificación Low/High
+		}
 		img := strings.ToLower(c.Docker.Image)
 
 		isLow := strings.Contains(img, "low_img")
