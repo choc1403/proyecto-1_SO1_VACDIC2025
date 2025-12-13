@@ -48,7 +48,7 @@ static int cont_show(struct seq_file *m, void *v)
         get_mem_from_mm(task->mm, &vsz_kb, &rss_kb);
 
         /* calcular porcentaje sin float */
-        unsigned long pct_x100 = percent_of_x100(rss_kb, total_kb);
+        unsigned long pct_x100 = percent_of_x100(vsz_kb, total_kb);
         unsigned long pct_int  = pct_x100 / 100;
         unsigned long pct_dec  = pct_x100 % 100;
 
