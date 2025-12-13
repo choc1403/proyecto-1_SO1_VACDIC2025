@@ -110,7 +110,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
 
 		// Save record in DB
-		log.Println("Guardando en la base de datos...")
+		//log.Println("Guardando en la base de datos...")
 		database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
 	}
 	for _, cand := range candidates {
@@ -123,10 +123,10 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		shouldKill := false
 		reason := ""
 
-		log.Println("CPU:", cand.Cpu, " RAM:", cand.Mem,
-			" HighCPU:", isHighCPU, " HighRAM:", isHighRAM, " Low:", isLow,
-			" ReasonCPU:", isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD,
-			" ReasonRAM:", isHighRAM && cand.Mem > var_const.MEM_THRESHOLD)
+		/*log.Println("CPU:", cand.Cpu, " RAM:", cand.Mem,
+		" HighCPU:", isHighCPU, " HighRAM:", isHighRAM, " Low:", isLow,
+		" ReasonCPU:", isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD,
+		" ReasonRAM:", isHighRAM && cand.Mem > var_const.MEM_THRESHOLD)*/
 
 		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
 			shouldKill = true
