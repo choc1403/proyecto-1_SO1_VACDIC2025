@@ -27,14 +27,40 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 		log.Println("Nombre del proceso: ", p.Name, "Línea de Comandos Completa: ", p.Cmdline)
 
+		// Dentro de DecideAndAct, dentro del bucle for _, p := range containers
 		if d, ok := dmap[p.Pid]; ok {
+			// Caso 1: Proceso principal, usa info de Docker
 			detected = append(detected, CInfo{Proc: p, Docker: d})
 		} else {
+			// Caso 2: Proceso que no es el principal (Podría ser un SHIM)
+
+			// Intenta encontrar el ID del contenedor en la línea de comandos del shim
+			if p.Name == "containerd-shim" {
+
+				// **Lógica para extraer el Container ID del p.Cmdline**
+				// Podrías usar expresiones regulares o manipulación de strings
+				// buscando la cadena "-id " y deteniéndote en el siguiente espacio.
+
+				containerID := ExtractContainerID(p.Cmdline)
+
+				if containerID != "" {
+					// **Buscar la imagen real usando el Container ID**
+					dockerInfo, err := GetDockerInfoByID(containerID) // Nueva función auxiliar
+
+					if err == nil {
+						detected = append(detected, CInfo{Proc: p, Docker: dockerInfo})
+						// ¡Ahora c.Docker.Image tendrá el nombre real (ej: 'low_img')!
+						continue
+					}
+				}
+			}
+
+			// Caso 3: Proceso genérico (o shim fallido)
 			detected = append(detected, CInfo{
 				Proc: p,
 				Docker: var_const.DockerInfo{
 					ContainerID: "",
-					Image:       p.Cmdline,
+					Image:       p.Cmdline, // Usar Cmdline por defecto
 					Pid:         p.Pid,
 					Name:        p.Name,
 				},
@@ -47,11 +73,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	lowCount := 0
 	highCount := 0
 	for _, c := range detected {
-		if c.Proc.Name == "containerd" || c.Proc.Name == "containerd-shim" || c.Proc.Name == "dockerd" || c.Proc.Name == "docker-proxy" {
-			// Opcional: registrar que es infraestructura y continuar al siguiente
-			log.Printf("Skip: Infrastructure process %s with PID %d", c.Proc.Name, c.Proc.Pid)
-			continue // Salta la clasificación Low/High
-		}
+
 		img := strings.ToLower(c.Docker.Image)
 
 		isLow := strings.Contains(img, "low_img")
