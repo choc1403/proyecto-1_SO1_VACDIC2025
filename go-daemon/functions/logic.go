@@ -37,7 +37,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 				},
 			})
 		}
-		log.Println("detected: ", detected)
+
 	}
 
 	// count low/high based on image naming heuristic: image contains "low" or "high"
