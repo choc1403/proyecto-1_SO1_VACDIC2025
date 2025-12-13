@@ -1,110 +1,107 @@
 #!/bin/bash
 
-# Definir las imágenes
+# Configuración
 LOW_IMAGE="low_img"
 HIGH_CPU_IMAGE="high_cpu_img"
 HIGH_RAM_IMAGE="high_mem_img"
 
-# Crear un array con las imágenes
-IMAGES=("$LOW_IMAGE" "$HIGH_CPU_IMAGE" "$HIGH_RAM_IMAGE")
 
-# Número máximo de contenedores totales
-MAX_CONTAINERS=10
+REQUIRED_LOW=3
+REQUIRED_HIGH=2
+REQUIRED_TOTAL=10
 
-# Función para contar contenedores de las imágenes especificadas
-contar_contenedores() {
-    # Contar contenedores de cada imagen (incluyendo los detenidos)
-    local total=0
+
+
+# 1. CONTAR EXISTENTES
+CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
+
+
+echo "Actual:"
+echo "Total: $CURRENT_TOTAL"
+
+OVER_LIMIT=$((CURRENT_TOTAL - REQUIRED_TOTAL))
+
+if (( OVER_LIMIT > 0 )); then
+    echo "Límite excedido por $OVER_LIMIT contenedores. Eliminando los más antiguos..."
+
+    # 1. Obtener los IDs de todos los contenedores existentes (incluyendo detenidos).
+    # 2. Ordenarlos por 'CreatedAt' (ASC: más antiguos primero).
+    # 3. Tomar solo los primeros $OVER_LIMIT IDs.
+    CONTAINERS_TO_REMOVE=$(docker ps -a --format '{{.CreatedAt}}\t{{.ID}}' | sort -n | head -n $OVER_LIMIT | awk '{print $2}')
     
-    for imagen in "${IMAGES[@]}"; do
-        # Contar contenedores creados de cada imagen
-        local cantidad=$(docker ps -a --filter "ancestor=$imagen" --format "{{.ID}}" | wc -l)
-        total=$((total + cantidad))
+    if [ -n "$CONTAINERS_TO_REMOVE" ]; then
+        # Detener e inmediatamente eliminar los contenedores
+        echo "Deteniendo y eliminando contenedores: $CONTAINERS_TO_REMOVE"
+        # Usamos '|| true' para que el script no falle si un contenedor ya está detenido
+        docker rm -f $CONTAINERS_TO_REMOVE || true 
+        
+        # Volver a contar después de la limpieza
+        CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
+        echo "Limpieza completa. Nuevo Total: $CURRENT_TOTAL"
+    else
+        echo "Advertencia: No se encontraron contenedores para eliminar a pesar de OVER_LIMIT > 0."
+    fi
+
+fi
+
+CURRENT_LOW=$(docker ps -a --filter "ancestor=$LOW_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH_CPU=$(docker ps -a --filter "ancestor=$HIGH_CPU_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH_RAM=$(docker ps -a --filter "ancestor=$HIGH_RAM_IMAGE" --format "{{.ID}}" | wc -l)
+CURRENT_HIGH=$((CURRENT_HIGH_CPU + CURRENT_HIGH_RAM))
+
+echo "Actual (después de limpiar y recontar):"
+echo " Bajo consumo: $CURRENT_LOW"
+echo " Alto consumo: $CURRENT_HIGH"
+echo " Total:  $((CURRENT_LOW + CURRENT_HIGH_CPU + CURRENT_HIGH_RAM))"
+
+# ---------- 2. CREAR CONTENEDORES DE BAJO CONSUMO ----------
+MISSING_LOW=$((REQUIRED_LOW - CURRENT_LOW))
+
+if (( MISSING_LOW > 0 )); then
+    echo "Creando $MISSING_LOW contenedores de BAJO consumo..."
+    for i in $(seq 1 $MISSING_LOW)
+    do
+        NAME="low_container_$(date +%s)_$RANDOM"
+        docker run -d --name "$NAME" "$LOW_IMAGE"
     done
-    
-    echo $total
-}
-
-# Verificar si Docker está instalado y funcionando
-if ! command -v docker &> /dev/null; then
-    echo "Error: Docker no está instalado o no se encuentra en el PATH."
-    exit 1
 fi
 
-# Verificar si el daemon de Docker está ejecutándose
-if ! docker info &> /dev/null; then
-    echo "Error: El daemon de Docker no está ejecutándose."
-    exit 1
-fi
+# ---------- 3. CREAR CONTENEDORES DE ALTO CONSUMO ----------
+MISSING_HIGH=$((REQUIRED_HIGH - CURRENT_HIGH))
 
-# Obtener el número actual de contenedores de las imágenes especificadas
-contenedores_actuales=$(contar_contenedores)
+if (( MISSING_HIGH > 0 )); then
+    echo "Creando $MISSING_HIGH contenedores de ALTO consumo..."
+    for i in $(seq 1 $MISSING_HIGH)
+    do
+        NAME="high_container_$(date +%s)_$RANDOM"
 
-echo "Contenedores actuales de las imágenes especificadas: $contenedores_actuales"
-echo "Límite máximo de contenedores: $MAX_CONTAINERS"
+        # Elegir aleatorio entre alto CPU y alto RAM
+        if (( RANDOM % 2 == 0 )); then
+            IMG="$HIGH_CPU_IMAGE"
+        else
+            IMG="$HIGH_RAM_IMAGE"
+        fi
 
-# Verificar si ya se alcanzó el límite de contenedores
-if [ "$contenedores_actuales" -ge "$MAX_CONTAINERS" ]; then
-    echo "Ya se alcanzó el límite de $MAX_CONTAINERS contenedores."
-    echo "No se creará un nuevo contenedor."
-    
-    # Mostrar información de los contenedores existentes
-    echo -e "\nContenedores existentes:"
-    for imagen in "${IMAGES[@]}"; do
-        echo "Imagen: $imagen"
-        docker ps -a --filter "ancestor=$imagen" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.CreatedAt}}"
-        echo ""
+        docker run -d --name "$NAME" "$IMG"
     done
-    
-    exit 0
 fi
 
-# Si no se ha alcanzado el límite, crear un nuevo contenedor
+# ---------- 4. COMPLETAR HASTA 10 CONTENEDORES TOTALES ----------
+CURRENT_TOTAL=$(docker ps -a --format "{{.ID}}" | wc -l)
+MISSING_TOTAL=$((REQUIRED_TOTAL - CURRENT_TOTAL))
 
-# Seleccionar una imagen aleatoria del array
-indice_imagen=$((RANDOM % ${#IMAGES[@]}))
-IMAGEN_SELECCIONADA=${IMAGES[$indice_imagen]}
+if (( MISSING_TOTAL > 0 )); then
+    echo "Creando $MISSING_TOTAL contenedores para completar 10..."
 
-# Generar un nombre único para el contenedor
-NOMBRE_CONTENEDOR="${IMAGEN_SELECCIONADA}_$(date +%Y%m%d_%H%M%S)_$RANDOM"
+    ALL_IMAGES=("$LOW_IMAGE" "$HIGH_CPU_IMAGE" "$HIGH_RAM_IMAGE")
 
-echo "Creando un nuevo contenedor..."
-echo "Imagen seleccionada: $IMAGEN_SELECCIONADA"
-echo "Nombre del contenedor: $NOMBRE_CONTENEDOR"
-
-# Crear el contenedor (ajusta los parámetros según tus necesidades)
-# Nota: Asegúrate de que las imágenes existan localmente o en un registro
-case $IMAGEN_SELECCIONADA in
-    "$LOW_IMAGE")
-        # Configuración para contenedor de baja demanda
-        docker run -d --name "$NOMBRE_CONTENEDOR" "$IMAGEN_SELECCIONADA"
-        ;;
-    "$HIGH_CPU_IMAGE")
-        # Configuración para contenedor de alto CPU
-        docker run -d --name "$NOMBRE_CONTENEDOR" --cpus="2" "$IMAGEN_SELECCIONADA"
-        ;;
-    "$HIGH_RAM_IMAGE")
-        # Configuración para contenedor de alta memoria
-        docker run -d --name "$NOMBRE_CONTENEDOR" --memory="3g" "$IMAGEN_SELECCIONADA"
-        ;;
-    *)
-        # Configuración por defecto
-        docker run -d --name "$NOMBRE_CONTENEDOR" "$IMAGEN_SELECCIONADA"
-        ;;
-esac
-
-# Verificar si el contenedor se creó correctamente
-if [ $? -eq 0 ]; then
-    echo "Contenedor creado exitosamente: $NOMBRE_CONTENEDOR"
-    
-    # Mostrar el nuevo total de contenedores
-    nuevo_total=$(contar_contenedores)
-    echo "Total de contenedores ahora: $nuevo_total"
-else
-    echo "Error al crear el contenedor."
-    exit 1
+    for i in $(seq 1 $MISSING_TOTAL)
+    do
+        IMG=${ALL_IMAGES[$RANDOM % ${#ALL_IMAGES[@]}]}
+        NAME="auto_container_$(date +%s)_$RANDOM"
+        docker run -d --name "$NAME" "$IMG"
+    done
 fi
 
-# Mostrar información del contenedor recién creado
-echo -e "\nInformación del contenedor creado:"
-docker ps --filter "name=$NOMBRE_CONTENEDOR" --format "table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+echo "Listo. Sistema estable según las reglas."
+
