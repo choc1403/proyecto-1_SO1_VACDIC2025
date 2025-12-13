@@ -1,6 +1,7 @@
 package functions
 
 import (
+	"log"
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
 	"strconv"
@@ -14,6 +15,8 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 		return nil, err
 	}
 
+	log.Println("Resultado obtenido: ", out)
+
 	lines := strings.Fields(out)
 	result := make(map[int]var_const.DockerInfo)
 
@@ -24,6 +27,7 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 		if err != nil {
 			continue
 		}
+		log.Println("Resultado obtenido: ", out2)
 		parts := strings.Fields(strings.TrimSpace(out2))
 		if len(parts) < 4 {
 			continue
@@ -39,6 +43,8 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 			Pid:         pid,
 			Name:        name,
 		}
+
+		log.Println("Resultado: ", result[pid])
 
 	}
 	return result, nil

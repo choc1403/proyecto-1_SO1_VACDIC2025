@@ -8,7 +8,6 @@ import (
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
 	"strings"
-	"time"
 )
 
 func DecideAndAct(containers []var_const.ProcProcess) {
@@ -25,11 +24,19 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	}
 	var detected []CInfo
 	for _, p := range containers {
-		d, ok := dmap[p.Pid]
-		if !ok {
-			continue
+		if d, ok := dmap[p.Pid]; ok {
+			detected = append(detected, CInfo{Proc: p, Docker: d})
+		} else {
+			detected = append(detected, CInfo{
+				Proc: p,
+				Docker: var_const.DockerInfo{
+					ContainerID: "",
+					Image:       p.Cmdline,
+					Pid:         p.Pid,
+					Name:        p.Name,
+				},
+			})
 		}
-		detected = append(detected, CInfo{Proc: p, Docker: d})
 		log.Println("detected: ", detected)
 	}
 
@@ -51,108 +58,8 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 	}
 
-	// For each detected compute mem% (parse) and cpu% using /proc
-	totalJiffies, _ := ReadTotalJiffies()
-	now := time.Now()
-	type decisionCandidate struct {
-		C   CInfo
-		Mem float64
-		Cpu float64
-	}
-	var candidates []decisionCandidate
+	log.Printf("Informacion: low=%d high=%d", lowCount, highCount)
 
-	for _, c := range detected {
-		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
-		// compute cpu via /proc/<pid>/stat and /proc/stat
-		procTime, err := ReadProcPidTime(c.Proc.Pid)
-		if err != nil {
-			// couldn't read stat; set cpu 0
-			procTime = 0
-		}
-		cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
-		candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
-
-		// Save record in DB
-		database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
-	}
-
-	// select to delete: those exceeding thresholds, but respect minima and don't kill grafana
-	for _, cand := range candidates {
-		img := strings.ToLower(cand.C.Docker.Image)
-
-		isLow := strings.Contains(img, "low_img")
-		isHighCPU := strings.Contains(img, "high_cpu_img")
-		isHighRAM := strings.Contains(img, "high_mem_img")
-
-		shouldKill := false
-		reason := ""
-
-		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
-			shouldKill = true
-			reason = fmt.Sprintf("cpu %.2f > %.2f", cand.Cpu, var_const.CPU_THRESHOLD)
-		}
-		if isHighRAM && cand.Mem > var_const.MEM_THRESHOLD {
-			shouldKill = true
-			reason = fmt.Sprintf("mem %.2f > %.2f", cand.Mem, var_const.MEM_THRESHOLD)
-		}
-		if isLow && (cand.Cpu > var_const.CPU_THRESHOLD || cand.Mem > var_const.MEM_THRESHOLD) {
-			shouldKill = true
-			reason = "low container exceeded threshold"
-		}
-		// ensure we don't drop below minima
-
-		if shouldKill {
-			if cand.C.Docker.ContainerID == "" {
-				// if not a docker container, skip deletion (can't)
-				log.Printf("Candidate pid %d not a docker container or no id available, skip deletion", cand.C.Proc.Pid)
-				continue
-			}
-			// don't delete grafana
-			if strings.Contains(strings.ToLower(cand.C.Docker.Image), "grafana") || strings.Contains(strings.ToLower(cand.C.Docker.Name), "grafana") {
-				log.Printf("Skipping deletion of grafana container %s", cand.C.Docker.ContainerID)
-				continue
-			}
-			if isHighCPU || isHighRAM {
-				if highCount <= var_const.MIN_HIGH_CONTAINERS {
-					log.Printf("Would delete %s but would violate MIN_HIGH_CONTAINERS (%d)", cand.C.Docker.ContainerID, var_const.MIN_HIGH_CONTAINERS)
-					continue
-				}
-			} else if isLow {
-				if lowCount <= var_const.MIN_LOW_CONTAINERS {
-					log.Printf(
-						"Would delete %s but would violate MIN_LOW_CONTAINERS (%d)",
-						cand.C.Docker.ContainerID,
-						var_const.MIN_LOW_CONTAINERS,
-					)
-					continue
-				}
-
-			} else {
-				if lowCount <= var_const.MIN_LOW_CONTAINERS {
-					log.Printf(
-						"Would delete %s (unclassified image) but would violate MIN_LOW_CONTAINERS (%d)",
-						cand.C.Docker.ContainerID,
-						var_const.MIN_LOW_CONTAINERS,
-					)
-					continue
-				}
-			}
-			// perform deletion
-			log.Printf("Deleting container %s due to %s (cpu=%.2f mem=%.2f)", cand.C.Docker.ContainerID, reason, cand.Cpu, cand.Mem)
-			out, err := utils.RunCommand("docker", "rm", "-f", cand.C.Docker.ContainerID)
-			if err != nil {
-				log.Printf("Failed to remove container %s: %v | out: %s", cand.C.Docker.ContainerID, err, out)
-			} else {
-				database.InsertDeletion(cand.C.Docker.ContainerID, reason)
-				// adjust counts
-				if isHighCPU || isHighRAM {
-					highCount--
-				} else {
-					lowCount--
-				}
-			}
-		}
-	}
 }
 
 func ProcessOnce() error {
