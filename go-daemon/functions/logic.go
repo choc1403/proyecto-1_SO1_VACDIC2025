@@ -26,8 +26,6 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	var detected []CInfo
 	for _, p := range containers {
 
-		log.Println("Nombre del proceso: ", p.Name, "Línea de Comandos Completa: ", p.Cmdline)
-
 		// Dentro de DecideAndAct, dentro del bucle for _, p := range containers
 		if d, ok := dmap[p.Pid]; ok {
 			// Caso 1: Proceso principal, usa info de Docker
