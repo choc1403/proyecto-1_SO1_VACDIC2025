@@ -123,7 +123,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		shouldKill := false
 		reason := ""
 
-		log.Println("CPU: ", cand.Cpu, " RAM: ", cand.Mem)
+		log.Println("CPU: ", cand.Cpu, " RAM: ", cand.Mem, " RASONAMIENTO CPU: ", isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD, " RASONAMIENTO RAM: ", isHighRAM && cand.Mem > var_const.MEM_THRESHOLD)
 
 		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
 			shouldKill = true
