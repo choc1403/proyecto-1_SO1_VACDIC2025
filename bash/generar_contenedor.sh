@@ -81,11 +81,11 @@ case $IMAGEN_SELECCIONADA in
         ;;
     "$HIGH_CPU_IMAGE")
         # Configuración para contenedor de alto CPU
-        docker run -d --name "$NOMBRE_CONTENEDOR" --cpus="2" "$IMAGEN_SELECCIONADA"
+        docker run -d --name "$NOMBRE_CONTENEDOR"  "$IMAGEN_SELECCIONADA"
         ;;
     "$HIGH_RAM_IMAGE")
         # Configuración para contenedor de alta memoria
-        docker run -d --name "$NOMBRE_CONTENEDOR" --memory="3g" "$IMAGEN_SELECCIONADA"
+        docker run -d --name "$NOMBRE_CONTENEDOR"  "$IMAGEN_SELECCIONADA"
         ;;
     *)
         # Configuración por defecto
