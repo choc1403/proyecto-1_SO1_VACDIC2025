@@ -99,6 +99,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	var candidates []decisionCandidate
 
 	for _, c := range detected {
+		log.Println("PROC MEM ", c.Proc.MemPct)
 		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
 		// compute cpu via /proc/<pid>/stat and /proc/stat
 		procTime, err := ReadProcPidTime(c.Proc.Pid)
