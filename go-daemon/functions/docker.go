@@ -2,7 +2,6 @@ package functions
 
 import (
 	"fmt"
-	"log"
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
 	"strconv"
@@ -42,8 +41,6 @@ func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
 			Pid:         pid,
 			Name:        name,
 		}
-
-		log.Println("Resultado: ", result[pid])
 
 	}
 	return result, nil
