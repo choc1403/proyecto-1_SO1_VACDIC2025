@@ -28,7 +28,7 @@ static int sys_show(struct seq_file *m, void *v)
         read_task_cmdline(task, cmdline, CMDLINE_MAX);
 
         /* calcular % MEM sin double */
-        unsigned long pct_x100 = percent_of_x100(rss_kb, total_kb);
+        unsigned long pct_x100 = percent_of_x100(vsz_kb, total_kb);
         unsigned long pct_int = pct_x100 / 100;
         unsigned long pct_dec = pct_x100 % 100;
 

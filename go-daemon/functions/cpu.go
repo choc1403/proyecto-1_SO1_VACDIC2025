@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"so1-daemon/var_const"
 	"strconv"
 	"strings"
@@ -80,24 +81,32 @@ func ReadProcPidTime(pid int) (uint64, error) {
 
 func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) float64 {
 	var_const.PrevSamplesLock.Lock()
-
 	defer var_const.PrevSamplesLock.Unlock()
 
 	prev, ok := var_const.PrevSamples[pid]
 	if !ok {
-		// store current and return 0 (no history)
-		var_const.PrevSamples[pid] = var_const.PidCpuSample{TotalProcessTime: curProcTime, TotalSystemJiffies: curTotal, Timestamp: curTs}
+		var_const.PrevSamples[pid] = var_const.PidCpuSample{
+			TotalProcessTime:   curProcTime,
+			TotalSystemJiffies: curTotal,
+			Timestamp:          curTs,
+		}
 		return 0.0
 	}
+
 	dProc := float64(curProcTime - prev.TotalProcessTime)
 	dTotal := float64(curTotal - prev.TotalSystemJiffies)
-	// update sample
-	var_const.PrevSamples[pid] = var_const.PidCpuSample{TotalProcessTime: curProcTime, TotalSystemJiffies: curTotal, Timestamp: curTs}
+
+	var_const.PrevSamples[pid] = var_const.PidCpuSample{
+		TotalProcessTime:   curProcTime,
+		TotalSystemJiffies: curTotal,
+		Timestamp:          curTs,
+	}
 
 	if dTotal <= 0 {
-
 		return 0.0
 	}
-	// cpu% = (dProc / dTotal) * 100
-	return (dProc / dTotal) * 100.0
+
+	numCPU := float64(runtime.NumCPU())
+
+	return (dProc / dTotal) * numCPU * 100.0
 }
