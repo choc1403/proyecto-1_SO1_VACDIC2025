@@ -113,7 +113,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 		// Save record in DB
 		log.Println("Guardando en la base de datos...")
-		//database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
+		database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
 	}
 	for _, cand := range candidates {
 		img := strings.ToLower(cand.C.Docker.Image)
@@ -173,8 +173,21 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 					continue
 				}
 			}
+
+			log.Printf("Deleting container %s due to %s (cpu=%.2f mem=%.2f)", cand.C.Docker.ContainerID, reason, cand.Cpu, cand.Mem)
+			out, err := utils.RunCommand("docker", "rm", "-f", cand.C.Docker.ContainerID)
+			if err != nil {
+				log.Printf("Failed to remove container %s: %v | out: %s", cand.C.Docker.ContainerID, err, out)
+			} else {
+				database.InsertDeletion(cand.C.Docker.ContainerID, reason)
+				// adjust counts
+				if isHighCPU || isHighRAM {
+					highCount--
+				} else {
+					lowCount--
+				}
+			}
 		}
-		log.Printf("Deleting container %s due to %s (cpu=%.2f mem=%.2f)", cand.C.Docker.ContainerID, reason, cand.Cpu, cand.Mem)
 	}
 
 }
