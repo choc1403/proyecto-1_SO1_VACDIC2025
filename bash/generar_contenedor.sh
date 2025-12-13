@@ -85,7 +85,7 @@ case $IMAGEN_SELECCIONADA in
         ;;
     "$HIGH_RAM_IMAGE")
         # Configuración para contenedor de alta memoria
-        docker run -d --name "$NOMBRE_CONTENEDOR" "$IMAGEN_SELECCIONADA"
+        docker run -d --name "$NOMBRE_CONTENEDOR" --memory="3g" "$IMAGEN_SELECCIONADA"
         ;;
     *)
         # Configuración por defecto
