@@ -15,8 +15,8 @@ const (
 	DOCKER_COMPOSE_F = "docker-compose.yml"
 
 	// Umbrales
-	CPU_THRESHOLD = 35.0 // %
-	MEM_THRESHOLD = 40.0 // %
+	CPU_THRESHOLD = 15.0 // %
+	MEM_THRESHOLD = 10.0 // %
 	// Mínimos
 	MIN_LOW_CONTAINERS  = 3
 	MIN_HIGH_CONTAINERS = 2
