@@ -7,6 +7,7 @@ static int sys_show(struct seq_file *m, void *v)
 {
     unsigned long total_kb, free_kb, used_kb;
     struct task_struct *task;
+    unsigned long long proc_jiffies;
 
     get_meminfo_kb(&total_kb, &free_kb);
     used_kb = total_kb - free_kb;
@@ -18,7 +19,9 @@ static int sys_show(struct seq_file *m, void *v)
     seq_printf(m, "  \"processes\": [\n");
 
     rcu_read_lock();
-    for_each_process(task) {
+    for_each_process(task)
+    {
+        proc_jiffies = task->utime + task->stime;
 
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
@@ -33,14 +36,14 @@ static int sys_show(struct seq_file *m, void *v)
         unsigned long pct_dec = pct_x100 % 100;
 
         seq_printf(m,
-            "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
-            "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
-            "\"mem_pct\": \"%lu.%02lu\", \"state\": \"%c\" },\n",
-            task->pid, task->comm, cmdline,
-            vsz_kb, rss_kb,
-            pct_int, pct_dec,
-            state
-        );
+                   "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
+                   "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
+                   "\"mem_pct\": \"%lu.%02lu\", \"proc_jiffies\": %llu, \"state\": \"%c\" },\n",
+                   task->pid, task->comm, cmdline,
+                   vsz_kb, rss_kb, pct_int, pct_dec,
+                   proc_jiffies, state);
+
+       
     }
     rcu_read_unlock();
 

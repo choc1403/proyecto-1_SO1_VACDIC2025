@@ -41,6 +41,7 @@ static int cont_show(struct seq_file *m, void *v)
         proc_jiffies = task->utime + task->stime;
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
+        char state = task_state_to_char(task);
 
         /* Obtener cmdline */
         read_task_cmdline(task, cmdline, CMDLINE_MAX);
@@ -61,10 +62,10 @@ static int cont_show(struct seq_file *m, void *v)
         seq_printf(m,
                    "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
                    "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
-                    "\"mem_pct\": \"%lu.%02lu\" \"proc_jiffies\": %llu },\n",
+                   "\"mem_pct\": \"%lu.%02lu\", \"proc_jiffies\": %llu, \"state\": \"%c\" },\n",
                    task->pid, task->comm, cmdline,
-                   vsz_kb, rss_kb,pct_int, pct_dec,
-                   proc_jiffies);
+                   vsz_kb, rss_kb, pct_int, pct_dec,
+                   proc_jiffies, state);
     }
     rcu_read_unlock();
 
