@@ -3,16 +3,19 @@
 #include <linux/sched/task.h>
 #include <linux/sched/signal.h>
 
-
 static bool is_container_task(char *cmdline)
 {
     if (!cmdline)
         return false;
 
-    if (strstr(cmdline, "docker")) return true;
-    if (strstr(cmdline, "container")) return true;
-    if (strstr(cmdline, "runc")) return true;
-    if (strstr(cmdline, "busybox")) return true;
+    if (strstr(cmdline, "docker"))
+        return true;
+    if (strstr(cmdline, "container"))
+        return true;
+    if (strstr(cmdline, "runc"))
+        return true;
+    if (strstr(cmdline, "busybox"))
+        return true;
 
     return false;
 }
@@ -22,8 +25,6 @@ static int cont_show(struct seq_file *m, void *v)
     struct task_struct *task;
     unsigned long total_kb, free_kb, used_kb;
     unsigned long long proc_jiffies;
-
-
 
     get_meminfo_kb(&total_kb, &free_kb);
     used_kb = total_kb - free_kb;
@@ -35,7 +36,8 @@ static int cont_show(struct seq_file *m, void *v)
     seq_printf(m, "  \"containers\": [\n");
 
     rcu_read_lock();
-    for_each_process(task) {
+    for_each_process(task)
+    {
         proc_jiffies = task->utime + task->stime;
         unsigned long vsz_kb = 0, rss_kb = 0;
         char cmdline[CMDLINE_MAX] = {0};
@@ -52,18 +54,17 @@ static int cont_show(struct seq_file *m, void *v)
 
         /* calcular porcentaje sin float */
         unsigned long pct_x100 = percent_of_x100(vsz_kb, total_kb);
-        unsigned long pct_int  = pct_x100 / 100;
-        unsigned long pct_dec  = pct_x100 % 100;
+        unsigned long pct_int = pct_x100 / 100;
+        unsigned long pct_dec = pct_x100 % 100;
+        
 
         seq_printf(m,
-     		"    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
-    		"\"vsz_kb\": %lu, \"rss_kb\": %lu, "
-    		"\"proc_jiffies\": %llu },\n",
-    		task->pid, task->comm, cmdline,
-    		vsz_kb, rss_kb,
-   		 proc_jiffies
-       );
-
+                   "    { \"pid\": %d, \"name\": \"%s\", \"cmdline\": \"%s\", "
+                   "\"vsz_kb\": %lu, \"rss_kb\": %lu, "
+                    "\"mem_pct\": \"%lu.%02lu\" \"proc_jiffies\": %llu },\n",
+                   task->pid, task->comm, cmdline,
+                   vsz_kb, rss_kb,pct_int, pct_dec,
+                   proc_jiffies);
     }
     rcu_read_unlock();
 
@@ -78,9 +79,9 @@ static int cont_open(struct inode *inode, struct file *file)
 
 /* proc_ops para kernel 6.x */
 static const struct proc_ops cont_fops = {
-    .proc_open    = cont_open,
-    .proc_read    = seq_read,
-    .proc_lseek   = seq_lseek,
+    .proc_open = cont_open,
+    .proc_read = seq_read,
+    .proc_lseek = seq_lseek,
     .proc_release = single_release,
 };
 
