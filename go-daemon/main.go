@@ -52,8 +52,19 @@ func main() {
 	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
+	// 1. PRIMERA MEDICIÓN: Solo guarda los datos base (CPU = 0.0)
 	if err := functions.ProcessOnce(); err != nil {
 		log.Printf("Initial processOnce error: %v", err)
+	}
+
+	// 2. Esperar un breve momento (1 segundo) para que haya una diferencia de tiempo real.
+	time.Sleep(1 * time.Second)
+
+	// 3. SEGUNDA MEDICIÓN: Ahora hay datos base Y una diferencia de tiempo.
+	// Esta llamada calculará y mostrará el uso de CPU real.
+	log.Println("Ejecutando la segunda medición para obtener CPU real...")
+	if err := functions.ProcessOnce(); err != nil {
+		log.Printf("Second processOnce error: %v", err)
 	}
 
 loop:
