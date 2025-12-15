@@ -141,8 +141,11 @@ Estas partes trabajan de forma automática y transparente.
 
 ![Arquitectura del proyecto](https://github.com/choc1403/proyecto-1_SO1_VACDIC2025/blob/master/documentacion/manual_tecnico/img/arquitectura.png)
 
+### PANEL DE CONTENEDORES
+![Panel de contenedores](https://github.com/choc1403/proyecto-1_SO1_VACDIC2025/blob/master/dashboard/img/panel_contenedores_202041390.png)
 
-
+### PANEL DE PROCESOS DEL SISTEMA
+![Panel de contenedores](https://github.com/choc1403/proyecto-1_SO1_VACDIC2025/blob/master/dashboard/img/panel_contenedores_202041390.png)
 
 
 ##  SOLUCIÓN DE PROBLEMAS
@@ -152,10 +155,33 @@ Estas partes trabajan de forma automática y transparente.
 
 ### El daemon no inicia
 - Verificar permisos de superusuario
+```bash
+whoami
+
+```
+
+Resultado esperado: *root*
+Si no es root, debes usar sudo.
+
 - Verificar que Docker esté en ejecución
+
+```bash
+sudo systemctl status docker
+
+docker ps
+```
+
 
 ### No aparecen datos en Grafana
 - Verificar que el daemon esté activo
+
+```bash
+ps aux | grep so1-daemon
+
+```
 - Verificar la base de datos SQLite
 
+```bash
+ls -l data/
 
+```
