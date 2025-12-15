@@ -23,7 +23,7 @@
   "liveNow": false,
   "panels": [
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -31,411 +31,6 @@
         "y": 0
       },
       "id": 7,
-      "panels": [],
-      "title": "PANEL DE CONTENEDORES POR #202041390",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "percentage",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 8,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "9.5.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "queryText": "SELECT mem_total_kb / 1024.0 / 1024.0 AS ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT mem_total_kb / 1024.0 / 1024.0 AS ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;\n",
-          "refId": "A",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        },
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "hide": false,
-          "queryText": "SELECT mem_free_kb / 1024.0 / 1024.0 AS free_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT mem_free_kb / 1024.0 / 1024.0 AS free_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;\n",
-          "refId": "B",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        },
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "hide": false,
-          "queryText": "SELECT COUNT(*) AS total_eliminados\nFROM deletions;\n\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT COUNT(*) AS total_eliminados\nFROM deletions;\n\n",
-          "refId": "C",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 9
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "queryText": "SELECT \n  ts * 1000 AS time,\n  mem_used_kb / 1024.0 / 1024.0 AS ram_used_gb\nFROM sys_metrics\nORDER BY ts ASC;\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT \n  ts * 1000 AS time,\n  mem_used_kb / 1024.0 / 1024.0 AS ram_used_gb\nFROM sys_metrics\nORDER BY ts ASC;\n",
-          "refId": "A",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 8,
-        "x": 0,
-        "y": 16
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.5.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "queryText": "SELECT \n  container_id || ' (PID ' || pid || ')' AS label,\n  MAX(mem_pct) AS value\nFROM containers\nGROUP BY container_id\nORDER BY value DESC\nLIMIT 5;\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT \n  container_id || ' (PID ' || pid || ')' AS label,\n  MAX(mem_pct) AS value\nFROM containers\nGROUP BY container_id\nORDER BY value DESC\nLIMIT 5;\n",
-          "refId": "A",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 9,
-        "x": 8,
-        "y": 16
-      },
-      "id": 11,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "queryText": "SELECT \n  container_id || ' (PID ' || pid || ')' AS label,\n  MAX(cpu_pct) AS value\nFROM containers\nGROUP BY container_id\nORDER BY value DESC\nLIMIT 5;\n",
-          "queryType": "table",
-          "rawQueryText": "SELECT \n  container_id || ' (PID ' || pid || ')' AS label,\n  MAX(cpu_pct) AS value\nFROM containers\nGROUP BY container_id\nORDER BY value DESC\nLIMIT 5;\n",
-          "refId": "A",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "frser-sqlite-datasource",
-        "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "percentage",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 7,
-        "x": 17,
-        "y": 16
-      },
-      "id": 12,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "9.5.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "frser-sqlite-datasource",
-            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
-          },
-          "queryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS used_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
-          "queryType": "table",
-          "rawQueryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS used_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
-          "refId": "A",
-          "timeColumns": [
-            "time",
-            "ts"
-          ]
-        }
-      ],
-      "title": "Panel Title",
-      "type": "gauge"
-    },
-    {
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 26
-      },
-      "id": 1,
       "panels": [
         {
           "datasource": {
@@ -449,7 +44,8 @@
                 "mode": "percentage",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "orange",
@@ -468,7 +64,422 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 41
+            "y": 1
+          },
+          "id": 8,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "pluginVersion": "9.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "queryText": "SELECT mem_total_kb / 1024.0 / 1024.0 AS \"TOTAL DE RAM\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "queryType": "table",
+              "rawQueryText": "SELECT mem_total_kb / 1024.0 / 1024.0 AS \"TOTAL DE RAM\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "refId": "A",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            },
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "hide": false,
+              "queryText": "SELECT mem_free_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM LIBRE\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "queryType": "table",
+              "rawQueryText": "SELECT mem_free_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM LIBRE\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "refId": "B",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            },
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "hide": false,
+              "queryText": "SELECT COUNT(*) AS \"TOTAL DE CONTENEDORES ELIMINADOS\"\nFROM deletions;",
+              "queryType": "table",
+              "rawQueryText": "SELECT COUNT(*) AS \"TOTAL DE CONTENEDORES ELIMINADOS\"\nFROM deletions;",
+              "refId": "C",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            }
+          ],
+          "title": "Panel Title",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "queryText": "SELECT \n  ts * 1000 AS time,\n  mem_used_kb / 1024.0 / 1024.0 AS \"USO DE RAM EN EL TIEMPO\"\nFROM sys_metrics\nORDER BY ts ASC;",
+              "queryType": "table",
+              "rawQueryText": "SELECT \n  ts * 1000 AS time,\n  mem_used_kb / 1024.0 / 1024.0 AS \"USO DE RAM EN EL TIEMPO\"\nFROM sys_metrics\nORDER BY ts ASC;",
+              "refId": "A",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            }
+          ],
+          "title": "USO DE RAM EN EL TIEMPO",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 8,
+            "x": 0,
+            "y": 16
+          },
+          "id": 10,
+          "options": {
+            "displayLabels": [
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true,
+              "values": []
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "queryText": "SELECT\n  container_id,\n  image,\n  pid,\n  mem_pct,\n  cpu_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id IS NOT NULL AND container_id != ''\nORDER BY mem_pct DESC\nLIMIT 5;",
+              "queryType": "table",
+              "rawQueryText": "SELECT\n  container_id,\n  image,\n  pid,\n  mem_pct,\n  cpu_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id IS NOT NULL AND container_id != ''\nORDER BY mem_pct DESC\nLIMIT 5;",
+              "refId": "A",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            }
+          ],
+          "title": "TOP 5 +CPU",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 9,
+            "x": 8,
+            "y": 16
+          },
+          "id": 11,
+          "options": {
+            "displayLabels": [
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true,
+              "values": []
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "queryText": "SELECT\n  container_id,\n  image,\n  pid,\n  cpu_pct,\n  mem_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id IS NOT NULL AND container_id != ''\nORDER BY cpu_pct DESC\nLIMIT 5;",
+              "queryType": "table",
+              "rawQueryText": "SELECT\n  container_id,\n  image,\n  pid,\n  cpu_pct,\n  mem_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id IS NOT NULL AND container_id != ''\nORDER BY cpu_pct DESC\nLIMIT 5;",
+              "refId": "A",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            }
+          ],
+          "title": "TOP 5 +RAM",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 7,
+            "x": 17,
+            "y": 16
+          },
+          "id": 12,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "pluginVersion": "9.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "frser-sqlite-datasource",
+                "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+              },
+              "queryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM USADA\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "queryType": "table",
+              "rawQueryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM USADA\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "refId": "A",
+              "timeColumns": [
+                "time",
+                "ts"
+              ]
+            }
+          ],
+          "title": "MEMORIA RAM USADA",
+          "type": "gauge"
+        }
+      ],
+      "title": "PANEL DE CONTENEDORES POR #202041390",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "panels": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 2
           },
           "id": 2,
           "options": {
@@ -578,7 +589,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -593,7 +605,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 49
+            "y": 10
           },
           "id": 3,
           "options": {
@@ -625,7 +637,7 @@
               ]
             }
           ],
-          "title": "Panel Title",
+          "title": "USO DE RAM EN EL TIEMPO",
           "type": "timeseries"
         },
         {
@@ -680,7 +692,7 @@
             "h": 8,
             "w": 9,
             "x": 0,
-            "y": 57
+            "y": 18
           },
           "id": 4,
           "options": {
@@ -714,9 +726,9 @@
                 "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
               },
               "hide": false,
-              "queryText": "SELECT pid, container_id, image, mem_pct\nFROM containers\nORDER BY mem_pct DESC\nLIMIT 5;\n",
+              "queryText": "SELECT\n  pid,\n  image AS process_name,\n  mem_pct,\n  cpu_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id = '' OR container_id IS NULL\nORDER BY mem_pct DESC\nLIMIT 5;",
               "queryType": "table",
-              "rawQueryText": "SELECT pid, container_id, image, mem_pct\nFROM containers\nORDER BY mem_pct DESC\nLIMIT 5;\n",
+              "rawQueryText": "SELECT\n  pid,\n  image AS process_name,\n  mem_pct,\n  cpu_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id = '' OR container_id IS NULL\nORDER BY mem_pct DESC\nLIMIT 5;",
               "refId": "A",
               "timeColumns": [
                 "time",
@@ -724,7 +736,7 @@
               ]
             }
           ],
-          "title": "Panel Title",
+          "title": "TOP 5 +CPU",
           "type": "piechart"
         },
         {
@@ -752,7 +764,7 @@
             "h": 8,
             "w": 10,
             "x": 9,
-            "y": 57
+            "y": 18
           },
           "id": 5,
           "options": {
@@ -784,9 +796,9 @@
                 "type": "frser-sqlite-datasource",
                 "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
               },
-              "queryText": "SELECT pid, container_id, image, cpu_pct\nFROM containers\nORDER BY cpu_pct DESC\nLIMIT 5;\n",
+              "queryText": "SELECT\n  pid,\n  image AS process_name,\n  cpu_pct,\n  mem_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id = '' OR container_id IS NULL\nORDER BY cpu_pct DESC\nLIMIT 5;",
               "queryType": "table",
-              "rawQueryText": "SELECT pid, container_id, image, cpu_pct\nFROM containers\nORDER BY cpu_pct DESC\nLIMIT 5;\n",
+              "rawQueryText": "SELECT\n  pid,\n  image AS process_name,\n  cpu_pct,\n  mem_pct,\n  datetime(ts, 'unixepoch') AS timestamp\nFROM containers\nWHERE container_id = '' OR container_id IS NULL\nORDER BY cpu_pct DESC\nLIMIT 5;",
               "refId": "A",
               "timeColumns": [
                 "time",
@@ -794,7 +806,7 @@
               ]
             }
           ],
-          "title": "Panel Title",
+          "title": "TOP 5 +RAM",
           "type": "piechart"
         },
         {
@@ -809,7 +821,8 @@
                 "mode": "percentage",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "orange",
@@ -828,7 +841,7 @@
             "h": 8,
             "w": 5,
             "x": 19,
-            "y": 57
+            "y": 18
           },
           "id": 6,
           "options": {
@@ -850,9 +863,9 @@
                 "type": "frser-sqlite-datasource",
                 "uid": "c2d2c4cd-3245-4fdf-a003-e977ec8e5b2b"
               },
-              "queryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS used_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "queryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM USADA\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
               "queryType": "table",
-              "rawQueryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS used_ram_gb\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
+              "rawQueryText": "SELECT mem_used_kb / 1024.0 / 1024.0 AS \"MEMORIA RAM USADA\"\nFROM sys_metrics\nORDER BY ts DESC\nLIMIT 1;",
               "refId": "A",
               "timeColumns": [
                 "time",
@@ -860,7 +873,7 @@
               ]
             }
           ],
-          "title": "Panel Title",
+          "title": "MEMORIA RAM USADA",
           "type": "gauge"
         }
       ],
@@ -868,7 +881,7 @@
       "type": "row"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [],
@@ -883,6 +896,6 @@
   "timezone": "",
   "title": "PANEL DE PROCESOS EN EL SISTEMA",
   "uid": "edb2dcf8-e36f-4358-a0c4-47bcf8db76c5",
-  "version": 14,
+  "version": 35,
   "weekStart": ""
 }
