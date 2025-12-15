@@ -8,43 +8,84 @@ import (
 	"strings"
 )
 
+// GetDockerPidMap obtiene un mapeo entre PID del sistema host y
+// la información básica de los contenedores Docker en ejecución.
+//
+// La función ejecuta comandos del CLI de Docker para:
+// 1) Obtener los IDs de los contenedores activos
+// 2) Consultar el PID principal de cada contenedor en el host
+// 3) Asociar dicho PID con la información del contenedor
+//
+// Retorna un mapa donde la clave es el PID del proceso del contenedor
+// y el valor es una estructura DockerInfo con sus metadatos.
 func GetDockerPidMap() (map[int]var_const.DockerInfo, error) {
-	out, err := utils.RunCommand("docker", "ps", "-q")
 
+	// Ejecuta `docker ps -q` para obtener únicamente los IDs
+	// de los contenedores actualmente en ejecución
+	out, err := utils.RunCommand("docker", "ps", "-q")
 	if err != nil {
 		return nil, err
 	}
 
+	// Divide la salida por espacios/saltos de línea
+	// Cada elemento corresponde a un ID de contenedor
 	lines := strings.Fields(out)
+
+	// Mapa resultado: PID del contenedor -> información del contenedor
 	result := make(map[int]var_const.DockerInfo)
 
+	// Recorre cada ID de contenedor activo
 	for _, id := range lines {
-		inspectFmt := "{{.State.Pid}} {{.Id}} {{.Config.Image}} {{.Name}}"
-		out2, err := utils.RunCommand("docker", "inspect", "--format", inspectFmt, id)
 
+		// Formato personalizado para docker inspect:
+		// - State.Pid    : PID del proceso principal del contenedor en el host
+		// - Id           : ID completo del contenedor
+		// - Config.Image : imagen utilizada
+		// - Name         : nombre del contenedor
+		inspectFmt := "{{.State.Pid}} {{.Id}} {{.Config.Image}} {{.Name}}"
+
+		// Ejecuta docker inspect con el formato definido
+		out2, err := utils.RunCommand(
+			"docker",
+			"inspect",
+			"--format",
+			inspectFmt,
+			id,
+		)
+
+		// Si ocurre un error con este contenedor, se omite
+		// para no afectar el procesamiento del resto
 		if err != nil {
 			continue
 		}
 
+		// Limpia la salida y la divide en campos individuales
 		parts := strings.Fields(strings.TrimSpace(out2))
+
+		// Se esperan al menos 4 campos según el formato definido
 		if len(parts) < 4 {
 			continue
 		}
+
+		// Convierte el PID del contenedor a entero
 		pid, _ := strconv.Atoi(parts[0])
+
+		// Extrae los metadatos del contenedor
 		cid := parts[1]
 		image := parts[2]
 		name := parts[3]
 
+		// Asocia el PID del proceso con la información del contenedor
 		result[pid] = var_const.DockerInfo{
 			ContainerID: cid,
 			Image:       image,
 			Pid:         pid,
 			Name:        name,
 		}
-
 	}
-	return result, nil
 
+	// Retorna el mapa PID -> DockerInfo
+	return result, nil
 }
 
 // ExtractContainerID busca la cadena "-id " en la línea de comandos

@@ -68,7 +68,7 @@ func ReadCgroupCpuTime(containerID string) (uint64, error) {
 	return 0, fmt.Errorf("cgroup CPU usage not found, last error: %w", lastErr)
 }
 
-// Nueva función auxiliar para parsear y normalizar
+// Función auxiliar para parsear y normalizar
 func parseCgroupValue(s string, isMicroseconds bool) (uint64, error) {
 	nanoseconds, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
@@ -84,70 +84,121 @@ func parseCgroupValue(s string, isMicroseconds bool) (uint64, error) {
 	return nanoseconds, nil
 }
 
+// ReadTotalJiffies lee el archivo /proc/stat y calcula el total de jiffies
+// consumidos por el CPU del sistema.
+//
+// El valor retornado representa la suma acumulada del tiempo de CPU
+// (user, nice, system, idle, iowait, irq, softirq, etc.) desde que el
+// sistema fue iniciado. Este valor se utiliza como referencia global
+// para calcular el porcentaje de uso de CPU de procesos individuales.
 func ReadTotalJiffies() (uint64, error) {
-	f, err := os.Open("/proc/stat")
 
+	// Abre el archivo /proc/stat, que contiene estadísticas globales del CPU
+	f, err := os.Open("/proc/stat")
 	if err != nil {
 		return 0, err
 	}
-
+	// Asegura el cierre del archivo al finalizar la función
 	defer f.Close()
 
+	// Crea un scanner para leer el archivo línea por línea
 	scanner := bufio.NewScanner(f)
 
+	// Lee la primera línea, que corresponde a las estadísticas del CPU
 	if !scanner.Scan() {
 		return 0, errors.New("empty /proc/stat")
 	}
 
+	// Obtiene la línea completa del CPU
 	line := scanner.Text()
+
+	// Divide la línea en campos separados por espacios
+	// Ejemplo: cpu  4705 150 2253 136239 ...
 	fields := strings.Fields(line)
 
+	// Se espera que existan al menos los campos básicos del CPU
 	if len(fields) < 8 {
-		return 0, fmt.Errorf("unexpected /proc/stat line: %s", line)
+		return 0, fmt.Errorf("inesperado /proc/stat line: %s", line)
 	}
 
+	// Variable que acumulará el total de jiffies
 	var total uint64 = 0
 
+	// Se ignora el primer campo ("cpu") y se suman todos los valores restantes
 	for i := 1; i < len(fields); i++ {
 		v, _ := strconv.ParseUint(fields[i], 10, 64)
 		total += v
 	}
 
+	// Retorna el total acumulado de jiffies del sistema
 	return total, nil
 }
 
+// ReadProcPidTime lee el archivo /proc/[pid]/stat y obtiene el tiempo
+// total de CPU consumido por un proceso específico.
+//
+// El valor retornado corresponde a la suma de:
+// - utime: tiempo de CPU en modo usuario
+// - stime: tiempo de CPU en modo kernel
+//
+// Ambos valores están expresados en jiffies y se utilizan para calcular
+// el porcentaje de uso de CPU del proceso.
 func ReadProcPidTime(pid int) (uint64, error) {
+
+	// Construye la ruta al archivo /proc del proceso
 	path := fmt.Sprintf("/proc/%d/stat", pid)
+
+	// Lee el contenido completo del archivo
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0, err
 	}
-	// fields may include spaces in cmd; use parsing that respects parentheses
-	// The format: pid (comm) R ... utime stime cutime cstime ...
-	// We find closing ')' then split after that.
+
+	// El archivo /proc/[pid]/stat contiene campos donde el nombre del proceso
+	// (comm) puede incluir espacios y está encerrado entre paréntesis.
+	//
+	// Formato:
+	// pid (comm) state ... utime stime ...
+	//
+	// Para evitar errores al dividir por espacios, se busca el último ')'
+	// y se procesa el texto a partir de ese punto.
 	s := string(b)
 	idx := strings.LastIndex(s, ")")
 	if idx == -1 {
-		return 0, fmt.Errorf("malformed stat for pid %d", pid)
+		return 0, fmt.Errorf("estadística malformada para pid %d", pid)
 	}
-	after := s[idx+2:] // skip ") "
+
+	// Se omite ") " y se trabaja únicamente con los campos posteriores
+	after := s[idx+2:]
 	fields := strings.Fields(after)
-	// utime is field 13 and stime 14 counting after comm? We already removed proc & comm, so utime is fields[11]? Safer to count original: utime is 14, stime 15 overall.
-	// After we removed first two tokens, utime -> fields[11], stime -> fields[12]
+
+	// En el formato original:
+	// utime es el campo 14 y stime el campo 15
+	// Al haber eliminado "pid (comm)", estos campos se desplazan:
+	// utime -> fields[11]
+	// stime -> fields[12]
 	if len(fields) < 15 {
-		// fallback: try naive split
+
+		// Mecanismo de respaldo: análisis ingenuo por espacios
 		parts := strings.Fields(s)
 		if len(parts) < 15 {
-			return 0, fmt.Errorf("unexpected stat fields for pid %d", pid)
+			return 0, fmt.Errorf("campos de estadística inesperados para pid %d", pid)
 		}
+
+		// Extrae utime y stime directamente de los campos originales
 		u, _ := strconv.ParseUint(parts[13], 10, 64)
 		st, _ := strconv.ParseUint(parts[14], 10, 64)
+
+		// Retorna la suma de tiempos de CPU
 		return u + st, nil
 	}
+
+	// Extrae utime y stime desde el arreglo ajustado
 	u, _ := strconv.ParseUint(fields[11], 10, 64)
 	st, _ := strconv.ParseUint(fields[12], 10, 64)
-	return u + st, nil
 
+	// Retorna el tiempo total de CPU consumido por el proceso
+	return u + st, nil
 }
 
 func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) float64 {
@@ -168,7 +219,6 @@ func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) floa
 	// --- 1. Calcular diferencias ---
 	dProc := float64(curProcTime - prev.TotalProcessTime) // Ahora en NANOSEGUNDOS (del cgroup)
 
-	// El dTotal basado en Jiffies ya no es necesario si normalizamos por tiempo real.
 	// dTotalJiffies := float64(curTotal - prev.TotalSystemJiffies)
 
 	// --- 2. Normalizar el tiempo transcurrido (dTotal real) ---
