@@ -13,26 +13,73 @@ import (
 	"time"
 )
 
-func ReadCgroupCpuTime(containerID string) (uint64, error) {
-	// Ruta estándar para el uso de CPU de Docker en cgroups v1
-	// Ej: /sys/fs/cgroup/cpuacct/docker/a1b2c3d4.../cpuacct.usage
-	path := fmt.Sprintf("/sys/fs/cgroup/cpuacct/docker/%s/cpuacct.usage", containerID)
+// En utils/cgroup.go o donde esté definida ReadCgroupCpuTime
 
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		// En algunos sistemas (cgroups v2), la ruta puede ser diferente.
-		// Se necesitaría lógica adicional si esta ruta falla.
-		return 0, fmt.Errorf("error reading cgroup CPU usage for %s: %w", containerID, err)
+func ReadCgroupCpuTime(containerID string) (uint64, error) {
+	// Lista de rutas comunes de cgroup para el uso total de CPU (nanosegundos o microsegundos)
+	// PROBABLEMENTE la que te sirva sea la última o la penúltima
+	paths := []string{
+		// 1. Cgroups V1 estándar (falló en tu log)
+		fmt.Sprintf("/sys/fs/cgroup/cpuacct/docker/%s/cpuacct.usage", containerID),
+		// 2. Cgroups V1 rootless o variante
+		fmt.Sprintf("/sys/fs/cgroup/cpuacct/system.slice/docker-%s.scope/cpuacct.usage", containerID),
+		// 3. Cgroups V2 (Docker/Systemd) - ¡Muy común!
+		fmt.Sprintf("/sys/fs/cgroup/system.slice/docker-%s.scope/cpu.stat", containerID),
+		// 4. Cgroups V2 (Unified) con docker ID completo (Raro pero posible)
+		fmt.Sprintf("/sys/fs/cgroup/unified/docker/%s/cpu.stat", containerID),
 	}
 
-	// El archivo contiene el uso total en nanosegundos como un string.
-	s := strings.TrimSpace(string(data))
+	var lastErr error
+	for _, path := range paths {
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			lastErr = err
+			continue // Intentar la siguiente ruta
+		}
 
-	// Convertir la cadena (nanosegundos) a uint64
+		// Si usamos cpu.stat (cgroups v2), necesitamos buscar la línea "usage_usec"
+		// o "usage_nsec" dentro del archivo.
+
+		// Asumimos que si llegamos aquí, el archivo existe y es válido.
+		s := strings.TrimSpace(string(data))
+
+		// Si el archivo es cpu.stat (cgroups v2), el formato es multi-línea (ej: usage_usec 12345678)
+		if strings.Contains(path, "cpu.stat") {
+			// Buscamos "usage_usec" o "usage_nsec"
+			lines := strings.SplitSeq(s, "\n")
+			for line := range lines {
+				if strings.HasPrefix(line, "usage_usec") || strings.HasPrefix(line, "usage_nsec") {
+					parts := strings.Fields(line) // Dividir por espacio (ej: ["usage_usec", "12345678"])
+					if len(parts) == 2 {
+						// El valor está en parts[1]
+						return parseCgroupValue(parts[1], strings.HasPrefix(line, "usage_usec"))
+					}
+				}
+			}
+			// Si no encontramos el campo, es un error de formato.
+			lastErr = fmt.Errorf("cpu.stat found but missing usage field")
+			continue
+		} else {
+			// Cgroups V1 (cpuacct.usage) - valor simple en nanosegundos
+			return parseCgroupValue(s, false) // V1 es típicamente nanosegundos
+		}
+	}
+
+	return 0, fmt.Errorf("cgroup CPU usage not found, last error: %w", lastErr)
+}
+
+// Nueva función auxiliar para parsear y normalizar
+func parseCgroupValue(s string, isMicroseconds bool) (uint64, error) {
 	nanoseconds, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("error parsing cgroup CPU value: %w", err)
 	}
+
+	// Si la lectura estaba en Microsegundos (uso_usec), la escalamos a Nanosegundos
+	if isMicroseconds {
+		nanoseconds *= 1000
+	}
+	// Si estaba en Nanosegundos (uso_nsec o V1), no hacemos nada.
 
 	return nanoseconds, nil
 }
