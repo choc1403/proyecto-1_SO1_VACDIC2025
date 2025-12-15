@@ -101,16 +101,21 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 	for _, c := range detected {
 
-		//memf, _ := utils.ParseMemPct(c.Proc.MemPct)
-		procJiffiesUint := c.Proc.ProcJiffies
+		// 1. Obtener la hora del proceso directamente desde /proc/<pid>/stat.
+		// Esto garantiza que obtendrás la medición de alta precisión del kernel.
+		procTime, err := ReadProcPidTime(c.Proc.Pid)
 
-		cpuPct := CalcCpuPercent(c.Proc.Pid, procJiffiesUint, totalJiffies, now)
-		//candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
+		if err != nil {
+			log.Printf("Warning: failed to read proc time for PID %d: %v", c.Proc.Pid, err)
+			procTime = 0
+		}
 
-		// Save record in DB
-		//log.Println("Guardando en la base de datos...")
-		log.Println("DEL PROC: ", procJiffiesUint, " Obtenido: ", totalJiffies, "cpuPct: ", cpuPct)
-		//database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
+		// 2. Usar este valor para el cálculo.
+		cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
+
+		// ... (El resto del log)
+		// Puedes loggear el valor de procTime real para verificar que se esté actualizando
+		log.Println("DEL PROC (JSON): ", c.Proc.ProcJiffies, " PROC TIME (kernel): ", procTime, " Obtenido: ", totalJiffies, "cpuPct: ", cpuPct)
 	}
 
 }
