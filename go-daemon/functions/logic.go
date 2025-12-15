@@ -201,7 +201,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 			}
 
 			log.Printf("Deleting container %s due to %s (cpu=%.2f mem=%.2f)", cand.C.Docker.ContainerID, reason, cand.Cpu, cand.Mem)
-			out, err := utils.RunCommand("docker", "rm", "-f", cand.C.Docker.ContainerID)
+			out, err := utils.RunCommand("docker", "stop", cand.C.Docker.ContainerID)
 			if err != nil {
 				log.Printf("Failed to remove container %s: %v | out: %s", cand.C.Docker.ContainerID, err, out)
 			} else {
