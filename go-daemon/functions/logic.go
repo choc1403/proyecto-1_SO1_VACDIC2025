@@ -91,18 +91,16 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 	totalJiffies, _ := ReadTotalJiffies()
 	now := time.Now()
-	/*
-		type decisionCandidate struct {
-			C   CInfo
-			Mem float64
-			Cpu float64
-		}*/
-	//var candidates []decisionCandidate
+	type decisionCandidate struct {
+		C   CInfo
+		Mem float64
+		Cpu float64
+	}
+	var candidates []decisionCandidate
 
 	for _, c := range detected {
 
-		// 1. Obtener la hora del proceso directamente desde /proc/<pid>/stat.
-		// Esto garantiza que obtendrás la medición de alta precisión del kernel.
+		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
 		procTime, err := ReadProcPidTime(c.Proc.Pid)
 
 		if err != nil {
@@ -112,10 +110,85 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 
 		// 2. Usar este valor para el cálculo.
 		cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
+		candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
 
-		// ... (El resto del log)
-		// Puedes loggear el valor de procTime real para verificar que se esté actualizando
-		log.Println("DEL PROC (JSON): ", c.Proc.ProcJiffies, " PROC TIME (kernel): ", procTime, " Obtenido: ", totalJiffies, "cpuPct: ", cpuPct)
+		// Save record in DB
+		//log.Println("Guardando en la base de datos...")
+		database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
+	}
+	for _, cand := range candidates {
+		img := strings.ToLower(cand.C.Docker.Image)
+
+		isLow := strings.Contains(img, "low_img")
+		isHighCPU := strings.Contains(img, "high_cpu_img")
+		isHighRAM := strings.Contains(img, "high_mem_img")
+
+		shouldKill := false
+		reason := ""
+
+		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
+			shouldKill = true
+			reason = fmt.Sprintf("cpu %.2f > %.2f", cand.Cpu, var_const.CPU_THRESHOLD)
+		}
+		if isHighRAM && cand.Mem > var_const.MEM_THRESHOLD {
+			shouldKill = true
+			reason = fmt.Sprintf("mem %.2f > %.2f", cand.Mem, var_const.MEM_THRESHOLD)
+		}
+		if isLow && (cand.Cpu > var_const.CPU_THRESHOLD || cand.Mem > var_const.MEM_THRESHOLD) {
+			shouldKill = true
+			reason = "low container exceeded threshold"
+		}
+		if shouldKill {
+			if cand.C.Docker.ContainerID == "" {
+				// if not a docker container, skip deletion (can't)
+				log.Printf("Candidate pid %d not a docker container or no id available, skip deletion", cand.C.Proc.Pid)
+				continue
+			}
+			// don't delete grafana
+			if strings.Contains(strings.ToLower(cand.C.Docker.Image), "grafana") || strings.Contains(strings.ToLower(cand.C.Docker.Name), "grafana") {
+				log.Printf("Skipping deletion of grafana container %s", cand.C.Docker.ContainerID)
+				continue
+			}
+			if isHighCPU || isHighRAM {
+				if highCount <= var_const.MIN_HIGH_CONTAINERS {
+					log.Printf("Would delete %s but would violate MIN_HIGH_CONTAINERS (%d)", cand.C.Docker.ContainerID, var_const.MIN_HIGH_CONTAINERS)
+					continue
+				}
+			} else if isLow {
+				if lowCount <= var_const.MIN_LOW_CONTAINERS {
+					log.Printf(
+						"Would delete %s but would violate MIN_LOW_CONTAINERS (%d)",
+						cand.C.Docker.ContainerID,
+						var_const.MIN_LOW_CONTAINERS,
+					)
+					continue
+				}
+
+			} else {
+				if lowCount <= var_const.MIN_LOW_CONTAINERS {
+					log.Printf(
+						"Would delete %s (unclassified image) but would violate MIN_LOW_CONTAINERS (%d)",
+						cand.C.Docker.ContainerID,
+						var_const.MIN_LOW_CONTAINERS,
+					)
+					continue
+				}
+			}
+
+			log.Printf("Deleting container %s due to %s (cpu=%.2f mem=%.2f)", cand.C.Docker.ContainerID, reason, cand.Cpu, cand.Mem)
+			out, err := utils.RunCommand("docker", "rm", "-f", cand.C.Docker.ContainerID)
+			if err != nil {
+				log.Printf("Failed to remove container %s: %v | out: %s", cand.C.Docker.ContainerID, err, out)
+			} else {
+				database.InsertDeletion(cand.C.Docker.ContainerID, reason)
+				// adjust counts
+				if isHighCPU || isHighRAM {
+					highCount--
+				} else {
+					lowCount--
+				}
+			}
+		}
 	}
 
 }
