@@ -49,7 +49,7 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	// main loop ticker
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	// 1. PRIMERA MEDICIÓN: Solo guarda los datos base (CPU = 0.0)
