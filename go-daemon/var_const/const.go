@@ -29,7 +29,7 @@ type ProcProcess struct {
 	VszKb       uint64 `json:"vsz_kb"`
 	RssKb       uint64 `json:"rss_kb"`
 	MemPct      string `json:"mem_pct"` // format "X.YY"
-	ProcJiffies string `json:"proc_jiffies"`
+	ProcJiffies uint64 `json:"proc_jiffies"`
 	State       string `json:"state,omitempty"`
 }
 

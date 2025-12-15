@@ -7,7 +7,6 @@ import (
 	"so1-daemon/database"
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -102,7 +101,7 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	for _, c := range detected {
 
 		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
-		procJiffiesUint, err := strconv.ParseUint(c.Proc.ProcJiffies, 10, 64)
+		procJiffiesUint := c.Proc.ProcJiffies
 
 		var procTime uint64
 		if err != nil {
