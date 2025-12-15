@@ -7,6 +7,7 @@ import (
 	"so1-daemon/database"
 	"so1-daemon/utils"
 	"so1-daemon/var_const"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -101,11 +102,22 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	for _, c := range detected {
 
 		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
-		// compute cpu via /proc/<pid>/stat and /proc/stat
-		procTime, err := ReadProcPidTime(c.Proc.Pid)
+		procJiffiesUint, err := strconv.ParseUint(c.Proc.ProcJiffies, 10, 64)
+
+		var procTime uint64
 		if err != nil {
-			// couldn't read stat; set cpu 0
-			procTime = 0
+			// Manejo de error si la conversión falla (ej: la cadena no es un número)
+			log.Printf("Error converting ProcJiffies '%s' for PID %d: %v. Using ReadProcPidTime as fallback.",
+				c.Proc.ProcJiffies, c.Proc.Pid, err)
+
+			// FALLBACK: Si la conversión del JSON falla, usa la lectura directa de /proc
+			procTime, err = ReadProcPidTime(c.Proc.Pid)
+			if err != nil {
+				procTime = 0 // Si el fallback también falla, usa 0
+			}
+		} else {
+			// El valor del JSON es válido
+			procTime = procJiffiesUint
 		}
 		cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
 		candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})

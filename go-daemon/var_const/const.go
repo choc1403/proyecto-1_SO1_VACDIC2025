@@ -23,13 +23,14 @@ const (
 )
 
 type ProcProcess struct {
-	Pid     int    `json:"pid"`
-	Name    string `json:"name"`
-	Cmdline string `json:"cmdline"`
-	VszKb   uint64 `json:"vsz_kb"`
-	RssKb   uint64 `json:"rss_kb"`
-	MemPct  string `json:"mem_pct"` // format "X.YY"
-	State   string `json:"state,omitempty"`
+	Pid         int    `json:"pid"`
+	Name        string `json:"name"`
+	Cmdline     string `json:"cmdline"`
+	VszKb       uint64 `json:"vsz_kb"`
+	RssKb       uint64 `json:"rss_kb"`
+	MemPct      string `json:"mem_pct"` // format "X.YY"
+	ProcJiffies string `json:"proc_jiffies"`
+	State       string `json:"state,omitempty"`
 }
 
 type ProcSys struct {
