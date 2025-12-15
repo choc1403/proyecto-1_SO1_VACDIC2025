@@ -110,7 +110,6 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
 		candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
 
-		log.Println("MEMORIA RAM UTILIZADA % ", c.Proc.MemPct, " CPU UTILIZADA ", cpuPct)
 		// Save record in DB
 		//log.Println("Guardando en la base de datos...")
 		database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
