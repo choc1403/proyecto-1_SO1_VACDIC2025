@@ -1,5 +1,5 @@
 #!/bin/bash
-
+trap '' SIGINT SIGTERM
 # Detener todos los contenedores en ejecución
 echo "Deteniendo todos los contenedores..."
 running_containers=$(docker ps -q)

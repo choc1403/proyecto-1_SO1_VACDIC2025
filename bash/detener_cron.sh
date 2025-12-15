@@ -1,5 +1,8 @@
 #!/bin/bash
+trap '' SIGINT SIGTERM
+
 CRONFILE="/etc/cron.d/project_containers_so1"
+
 if [ -f "$CRONFILE" ]; then
     sudo rm -f "$CRONFILE"
     #service cron reload || systemctl restart cron || true
