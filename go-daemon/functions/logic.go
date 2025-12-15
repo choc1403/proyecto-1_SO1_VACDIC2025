@@ -178,11 +178,11 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 		}
 		if shouldKill {
 			if cand.C.Docker.ContainerID == "" {
-				// if not a docker container, skip deletion (can't)
+
 				log.Printf("El candidato pid %d no es un contenedor Docker o no hay ningún ID disponible, omitir la eliminación.", cand.C.Proc.Pid)
 				continue
 			}
-			// don't delete grafana
+
 			if strings.Contains(strings.ToLower(cand.C.Docker.Image), "grafana") || strings.Contains(strings.ToLower(cand.C.Docker.Name), "grafana") {
 				log.Printf("Omitiendo la eliminación del contenedor grafana %s", cand.C.Docker.ContainerID)
 				continue
