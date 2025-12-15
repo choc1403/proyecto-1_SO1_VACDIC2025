@@ -139,6 +139,7 @@ Y seleccionamos en donde dice *Dashboards*
 ![Dashboards](https://github.com/choc1403/proyecto-1_SO1_VACDIC2025/blob/master/dashboard/img/config_dashboard.png)
 
 **Paso 3** Le damos click a donde dice *Upload dashboard JSON file*, aqui nos vamos a la carpeta de dashboard de nuestro proyecto, y seleccionamos el archivo *dashboard.json*
+![Import](https://github.com/choc1403/proyecto-1_SO1_VACDIC2025/blob/master/dashboard/img/importar_json.png)
 
 Luego se procede a dar click a *Load* y ya estaria conectado al Dashboard
 ---
@@ -157,9 +158,6 @@ Estas partes trabajan de forma automática y transparente.
 ---
 
 ##  DIAGRAMAS 
-
-### Diagrama de Flujo (ASCII)
-
 
 
 ### Flujo General del Sistema
