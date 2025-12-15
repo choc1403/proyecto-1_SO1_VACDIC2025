@@ -28,7 +28,7 @@ El sistema se compone de los siguientes elementos:
 
 ## 4. Requisitos del sistema
 
-- Sistema operativo Linux (kernel 5.x o superior)
+- Virtualizar un Sistema operativo Linux (Ubuntu 24.04.3 LTS)
 - Compilador GCC
 - Go 1.20 o superior
 - Docker
