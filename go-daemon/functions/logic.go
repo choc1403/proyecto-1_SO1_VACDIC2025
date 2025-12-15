@@ -129,11 +129,11 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 			" ReasonCPU:", isHighCPU && (cand.Cpu > var_const.CPU_THRESHOLD),
 			" ReasonRAM:", isHighRAM && (cand.Mem > var_const.MEM_THRESHOLD))
 
-		if cand.Cpu > var_const.CPU_THRESHOLD {
+		if isHighCPU && cand.Cpu > var_const.CPU_THRESHOLD {
 			shouldKill = true
 			reason = fmt.Sprintf("cpu %.2f > %.2f", cand.Cpu, var_const.CPU_THRESHOLD)
 		}
-		if cand.Mem > var_const.MEM_THRESHOLD {
+		if isHighRAM && cand.Mem > var_const.MEM_THRESHOLD {
 			shouldKill = true
 			reason = fmt.Sprintf("mem %.2f > %.2f", cand.Mem, var_const.MEM_THRESHOLD)
 		}
