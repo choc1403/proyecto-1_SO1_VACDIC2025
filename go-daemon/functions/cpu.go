@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"runtime"
+	
 	"so1-daemon/var_const"
 	"strconv"
 	"strings"
@@ -106,7 +106,7 @@ func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) floa
 		return 0.0
 	}
 
-	numCPU := float64(runtime.NumCPU())
+	//numCPU := float64(runtime.NumCPU())
 
-	return (dProc / dTotal) * numCPU * 100.0
+	return (dProc / dTotal)  * 100.0
 }
