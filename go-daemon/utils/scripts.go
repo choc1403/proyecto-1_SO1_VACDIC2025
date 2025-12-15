@@ -77,7 +77,7 @@ func RemoveCron() error {
 	comando := CRON_STOP_SCRIPT
 
 	log.Println("Removing cronjob...")
-	out, err := RunCommand("bash", comando)
+	out, err := RunCommand("sudo", "bash", comando)
 	if err != nil {
 		return fmt.Errorf("stop cron failed: %v | out: %s", err, out)
 	}
