@@ -11,5 +11,6 @@ def numero_primo(n):
 if __name__ == '__main__':
     i = 2
     while True:
-        numero_primo(i)
+        resultado = numero_primo(i)
+        print(f'El numero: {i} es un numero primo? {resultado}')
         i += 1
