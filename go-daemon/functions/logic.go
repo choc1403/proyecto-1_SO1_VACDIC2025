@@ -101,10 +101,30 @@ func DecideAndAct(containers []var_const.ProcProcess) {
 	for _, c := range detected {
 
 		memf, _ := utils.ParseMemPct(c.Proc.MemPct)
-		procTime, err := ReadProcPidTime(c.Proc.Pid)
+
+		if c.Docker.ContainerID == "" {
+			log.Printf("Skipping cgroup read for non-docker PID %d", c.Proc.Pid)
+			// Aquí puedes decidir usar 0.0 o el ReadProcPidTime original.
+			// Para la demostración, estableceremos el uso de CPU en 0.
+			procTime, err := ReadProcPidTime(c.Proc.Pid)
+
+			if err != nil {
+				log.Printf("Warning: failed to read proc time for PID %d: %v", c.Proc.Pid, err)
+				procTime = 0
+			}
+			cpuPct := CalcCpuPercent(c.Proc.Pid, procTime, totalJiffies, now)
+
+			candidates = append(candidates, decisionCandidate{C: c, Mem: memf, Cpu: cpuPct})
+			database.InsertContainerRecord(c.Docker.ContainerID, c.Proc.Pid, c.Docker.Image, cpuPct, memf)
+			continue
+		}
+
+		// --- 🎯 NUEVA LECTURA DEL CGROUP ---
+		// Esto lee el tiempo total de CPU en nanosegundos (la fuente de datos de Docker).
+		procTime, err := ReadCgroupCpuTime(c.Docker.ContainerID)
 
 		if err != nil {
-			log.Printf("Warning: failed to read proc time for PID %d: %v", c.Proc.Pid, err)
+			log.Printf("Warning: failed to read cgroup CPU time for %s: %v. Setting CPU to 0.", c.Docker.ContainerID, err)
 			procTime = 0
 		}
 

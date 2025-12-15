@@ -6,12 +6,36 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	
+
 	"so1-daemon/var_const"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func ReadCgroupCpuTime(containerID string) (uint64, error) {
+	// Ruta estándar para el uso de CPU de Docker en cgroups v1
+	// Ej: /sys/fs/cgroup/cpuacct/docker/a1b2c3d4.../cpuacct.usage
+	path := fmt.Sprintf("/sys/fs/cgroup/cpuacct/docker/%s/cpuacct.usage", containerID)
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		// En algunos sistemas (cgroups v2), la ruta puede ser diferente.
+		// Se necesitaría lógica adicional si esta ruta falla.
+		return 0, fmt.Errorf("error reading cgroup CPU usage for %s: %w", containerID, err)
+	}
+
+	// El archivo contiene el uso total en nanosegundos como un string.
+	s := strings.TrimSpace(string(data))
+
+	// Convertir la cadena (nanosegundos) a uint64
+	nanoseconds, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("error parsing cgroup CPU value: %w", err)
+	}
+
+	return nanoseconds, nil
+}
 
 func ReadTotalJiffies() (uint64, error) {
 	f, err := os.Open("/proc/stat")
@@ -85,6 +109,7 @@ func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) floa
 
 	prev, ok := var_const.PrevSamples[pid]
 	if !ok {
+		// ... (Almacenar la primera muestra y devolver 0.0)
 		var_const.PrevSamples[pid] = var_const.PidCpuSample{
 			TotalProcessTime:   curProcTime,
 			TotalSystemJiffies: curTotal,
@@ -93,20 +118,42 @@ func CalcCpuPercent(pid int, curProcTime, curTotal uint64, curTs time.Time) floa
 		return 0.0
 	}
 
-	dProc := float64(curProcTime - prev.TotalProcessTime)
-	dTotal := float64(curTotal - prev.TotalSystemJiffies)
+	// --- 1. Calcular diferencias ---
+	dProc := float64(curProcTime - prev.TotalProcessTime) // Ahora en NANOSEGUNDOS (del cgroup)
 
-	var_const.PrevSamples[pid] = var_const.PidCpuSample{
-		TotalProcessTime:   curProcTime,
-		TotalSystemJiffies: curTotal,
-		Timestamp:          curTs,
-	}
+	// El dTotal basado en Jiffies ya no es necesario si normalizamos por tiempo real.
+	// dTotalJiffies := float64(curTotal - prev.TotalSystemJiffies)
 
-	if dTotal <= 0 {
+	// --- 2. Normalizar el tiempo transcurrido (dTotal real) ---
+	dTime := curTs.Sub(prev.Timestamp).Seconds() // Tiempo real transcurrido en segundos
+
+	// Si la lectura falló o el tiempo no avanzó.
+	if dTime <= 0 {
 		return 0.0
 	}
 
+	// Guardar la muestra actual para el próximo ciclo
+	var_const.PrevSamples[pid] = var_const.PidCpuSample{
+		TotalProcessTime:   curProcTime,
+		TotalSystemJiffies: curTotal, // Se mantiene por si acaso, pero no se usa en el cálculo
+		Timestamp:          curTs,
+	}
+
+	// --- 3. Calcular el Uso de CPU (Basado en Nanosegundos y Tiempo Real) ---
+
+	// dProc (Nanosegundos consumidos) se compara con dTime (Segundos reales * 10^9 nanosegundos)
+	// dProc / (dTime * 1e9)  <-- Proporción de un solo núcleo (0.0 a 1.0)
+
+	// Se utiliza el factor runtime.NumCPU() para obtener el uso total
+	// (igual que docker stats, que puede exceder 100% si es multinúcleo)
 	//numCPU := float64(runtime.NumCPU())
 
-	return (dProc / dTotal)  * 100.0
+	// Fórmula para obtener el uso de CPU Total (similar a docker stats)
+	// Docker Stats = (dProc / dTime) / 10^9
+	// Usando el factor numCPU de Docker (Uso total vs tiempo total de un núcleo)
+
+	// Si quieres replicar Docker Stats (que puede > 100% en sistemas multi-CPU):
+	cpuTotal := (dProc / (dTime * 1e9)) * 100.0 // Esto asume que dProc está en nanosegundos
+
+	return cpuTotal // Retorna el porcentaje total (puede ser 400% si tienes 4 CPUs)
 }
